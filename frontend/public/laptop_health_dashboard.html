@@ -1,0 +1,2060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laptop System Diagnostics & Health Report | Nitro AN515-54</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0a0d14;
+      --bg-secondary: #101522;
+      --bg-card: rgba(20, 27, 45, 0.7);
+      --bg-card-hover: rgba(28, 38, 62, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(99, 102, 241, 0.3);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-indigo: #6366f1;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 45%),
+        radial-gradient(circle at 50% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent-indigo); }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 32px 24px 80px 24px; }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 36px;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .brand-section { display: flex; flex-direction: column; gap: 8px; }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 9999px;
+      color: #a5b4fc;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      width: fit-content;
+    }
+
+    .badge-pill .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.3rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 40%, #cbd5e1 70%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .subtitle span { display: flex; align-items: center; gap: 6px; }
+    .action-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: var(--transition);
+      text-decoration: none;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-indigo), #4f46e5);
+      color: #ffffff;
+      box-shadow: 0 4px 16px rgba(79, 70, 229, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+      margin-bottom: 36px;
+    }
+
+    @media (max-width: 1024px) { .hero-grid { grid-template-columns: 1fr; } }
+
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 36px -10px rgba(0, 0, 0, 0.5);
+      transition: var(--transition);
+    }
+
+    .glass-card:hover { border-color: rgba(255, 255, 255, 0.14); }
+
+    .health-gauge-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      justify-content: center;
+      background: linear-gradient(180deg, rgba(26, 35, 60, 0.7) 0%, rgba(16, 21, 35, 0.8) 100%);
+      border: 1px solid var(--border-accent);
+      position: relative;
+    }
+
+    .health-gauge-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan), var(--accent-indigo));
+    }
+
+    .gauge-wrapper {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      margin: 16px 0 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gauge-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+    .gauge-bg { fill: none; stroke: rgba(255, 255, 255, 0.07); stroke-width: 14; }
+    .gauge-fill {
+      fill: none;
+      stroke: var(--accent-emerald);
+      stroke-width: 14;
+      stroke-linecap: round;
+      stroke-dasharray: 440;
+      stroke-dashoffset: calc(440 - (440 * 84) / 100);
+      transition: stroke-dashoffset 1.5s ease-out;
+      filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.4));
+    }
+
+    .gauge-center-text { position: absolute; display: flex; flex-direction: column; align-items: center; }
+    .gauge-score { font-family: 'Outfit', sans-serif; font-size: 2.8rem; font-weight: 800; line-height: 1; color: #ffffff; }
+    .gauge-grade { font-size: 0.85rem; font-weight: 700; color: var(--accent-emerald); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+    .health-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; }
+    .health-verdict { color: var(--text-secondary); font-size: 0.875rem; line-height: 1.5; }
+
+    .metrics-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .metric-pill-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: var(--transition);
+    }
+
+    .metric-pill-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .metric-header { display: flex; justify-content: space-between; align-items: center; }
+    .metric-name { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    .status-badge { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase; }
+    .status-good { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .status-critical { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+
+    .metric-val { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; color: #ffffff; }
+    .metric-sub { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; }
+
+    .mini-progress-bg { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+    .mini-progress-fill { height: 100%; border-radius: 3px; transition: width 1s ease-in-out; }
+
+    .tabs-nav {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 32px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .tab-btn {
+      padding: 12px 20px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .tab-btn:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.04); }
+    .tab-btn.active { color: #ffffff; background: rgba(99, 102, 241, 0.18); border: 1px solid rgba(99, 102, 241, 0.35); }
+    .tab-btn .tab-count { font-size: 0.75rem; padding: 2px 7px; border-radius: 9999px; background: rgba(255, 255, 255, 0.1); }
+    .tab-btn.active .tab-count { background: var(--accent-indigo); color: #ffffff; }
+
+    .tab-pane { display: none; animation: fadeIn 0.3s ease-in-out; }
+    .tab-pane.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .section-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title .title-left { display: flex; align-items: center; gap: 10px; }
+
+    .spec-list { display: flex; flex-direction: column; gap: 14px; }
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.875rem;
+    }
+    .spec-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .spec-label { color: var(--text-muted); font-weight: 500; }
+    .spec-value { color: var(--text-primary); font-weight: 600; font-family: 'JetBrains Mono', monospace; text-align: right; }
+
+    .battery-alert-banner {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(244, 63, 94, 0.08) 100%);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      margin-bottom: 28px;
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .battery-icon-large {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-lg);
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-amber);
+      font-size: 1.8rem;
+      flex-shrink: 0;
+    }
+
+    .battery-content h3 { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; color: #fef3c7; margin-bottom: 8px; }
+    .battery-content p { color: #e2e8f0; font-size: 0.925rem; line-height: 1.6; margin-bottom: 16px; }
+
+    .battery-stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+    }
+
+    .stat-block { display: flex; flex-direction: column; gap: 4px; }
+    .stat-block .stat-lbl { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+    .stat-block .stat-num { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #ffffff; }
+
+    .opt-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 16px;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .opt-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .opt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .opt-title-group { display: flex; align-items: center; gap: 12px; }
+    .opt-priority-tag { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px; text-transform: uppercase; }
+    .prio-high { background: rgba(244, 63, 94, 0.2); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.4); }
+    .prio-med { background: rgba(245, 158, 11, 0.2); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .prio-low { background: rgba(99, 102, 241, 0.2); color: #c7d2fe; border: 1px solid rgba(99, 102, 241, 0.4); }
+
+    .opt-title { font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 700; color: #ffffff; }
+    .opt-savings-badge {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 4px 12px;
+      border-radius: var(--radius-sm);
+    }
+
+    .opt-desc { color: var(--text-secondary); font-size: 0.885rem; margin-bottom: 16px; line-height: 1.5; }
+
+    .terminal-box {
+      background: #060911;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .terminal-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: #38bdf8;
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-right: 8px;
+    }
+
+    .copy-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f8fafc;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.775rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .copy-btn:hover { background: var(--accent-indigo); border-color: var(--accent-indigo); color: #ffffff; }
+    .copy-btn.copied { background: var(--accent-emerald); border-color: var(--accent-emerald); color: #064e3b; }
+
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      color: #ffffff;
+      font-size: 0.875rem;
+      min-width: 280px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .search-input:focus { border-color: var(--accent-indigo); background: rgba(255, 255, 255, 0.08); }
+
+    .filter-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .filter-pill:hover { background: rgba(255, 255, 255, 0.1); color: var(--text-primary); }
+    .filter-pill.active { background: var(--accent-indigo); border-color: var(--accent-indigo); color: #ffffff; }
+
+    .custom-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.875rem; }
+    .custom-table th {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .custom-table th:first-child { border-top-left-radius: var(--radius-md); }
+    .custom-table th:last-child { border-top-right-radius: var(--radius-md); }
+    .custom-table td { padding: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); vertical-align: middle; }
+    .custom-table tr:hover td { background: rgba(255, 255, 255, 0.03); }
+
+    .action-stop-btn {
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      color: #fda4af;
+      transition: var(--transition);
+    }
+
+    .action-stop-btn:hover { background: var(--accent-rose); color: #ffffff; }
+
+    .master-script-box {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      margin-top: 36px;
+    }
+
+    .master-script-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      border: 1px solid var(--accent-emerald);
+      color: #f8fafc;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 9999;
+    }
+
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    .charts-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 900px) {
+      .charts-grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .chart-container-box {
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      height: 320px;
+      position: relative;
+    }
+
+    @media print {
+      body { background: #ffffff; color: #000000; }
+      .glass-card, .battery-alert-banner, .master-script-box {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        color: #000000;
+        box-shadow: none;
+      }
+      .btn, .tabs-nav, .action-bar { display: none !important; }
+      .tab-pane { display: block !important; margin-bottom: 40px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <header>
+      <div class="brand-section">
+        <div class="badge-pill">
+          <div class="dot"></div> Live Health Telemetry
+        </div>
+        <h1>Laptop Health & Hardware Report</h1>
+        <div class="subtitle">
+          <span>💻 <strong>Acer Nitro AN515-54</strong> (Nitro 5)</span>
+          <span>🐧 Zorin OS 17.2 (Ubuntu 22.04.5 LTS / Jammy Jellyfish)</span>
+          <span>⏱ Uptime: up 10 hours, 53 minutes</span>
+          <span>📅 Last Updated: <strong>Saturday, August 08, 2026 - 08:39:27 PM</strong></span>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn btn-secondary" onclick="window.print()">
+          🖨️ Print / Save PDF
+        </button>
+        <button class="btn btn-primary" onclick="copyMasterCleanup()">
+          ⚡ Copy Remaining Optimizations
+        </button>
+      </div>
+    </header>
+
+    <div class="hero-grid">
+      
+      <div class="glass-card health-gauge-card">
+        <div class="health-title">Overall Device Health</div>
+        <div class="gauge-wrapper">
+          <svg class="gauge-svg" viewBox="0 0 160 160">
+            <circle class="gauge-bg" cx="80" cy="80" r="70" />
+            <circle class="gauge-fill" cx="80" cy="80" r="70" />
+          </svg>
+          <div class="gauge-center-text">
+            <div class="gauge-score">84<span style="font-size: 1.4rem; color: var(--text-muted);">%</span></div>
+            <div class="gauge-grade">Grade A-</div>
+          </div>
+        </div>
+        <div style="font-weight: 700; color: #ffffff; margin-bottom: 6px; font-size: 1.05rem;">
+          Good / Healthy Overall (Odysseus Stopped, Battery Attention Required)
+        </div>
+        <div class="health-verdict">
+          CPU and discrete GTX 1650 are in top condition. Odysseus stack stopped (920 MB RAM reclaimed).
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-title">
+          <div class="title-left">
+            <span>📊 Subsystem Condition Breakdown</span>
+          </div>
+          <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Live Sensor Readout</span>
+        </div>
+
+        <div class="metrics-summary-grid">
+          
+          <div class="metric-pill-card">
+            <div class="metric-header">
+              <span class="metric-name">CPU & Thermals</span>
+              <span class="status-badge status-good">73.0°C • Optimal</span>
+            </div>
+            <div class="metric-val">73.0°C</div>
+            <div class="metric-sub">Intel Core i5-9300H (4C/8T) • No Throttling</div>
+            <div class="mini-progress-bg">
+              <div class="mini-progress-fill" style="width: 52%; background: var(--accent-emerald);"></div>
+            </div>
+          </div>
+
+          <div class="metric-pill-card">
+            <div class="metric-header">
+              <span class="metric-name">NVIDIA GTX 1650</span>
+              <span class="status-badge status-good">39°C • 2W</span>
+            </div>
+            <div class="metric-val">39°C</div>
+            <div class="metric-sub">4 GB VRAM • Optimus Standby (Healthy)</div>
+            <div class="mini-progress-bg">
+              <div class="mini-progress-fill" style="width: 25%; background: var(--accent-cyan);"></div>
+            </div>
+          </div>
+
+          <div class="metric-pill-card">
+            <div class="metric-header">
+              <span class="metric-name">RAM (16 GB)</span>
+              <span class="status-badge status-good">11.84 GB Free</span>
+            </div>
+            <div class="metric-val">23.4% <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Used</span></div>
+            <div class="metric-sub">3.62 GB / 15.5 GB • 0% Swap Draw</div>
+            <div class="mini-progress-bg">
+              <div class="mini-progress-fill" style="width: 23.4%; background: var(--accent-indigo);"></div>
+            </div>
+          </div>
+
+          <div class="metric-pill-card" style="border-color: rgba(245, 158, 11, 0.35); background: rgba(245, 158, 11, 0.05);">
+            <div class="metric-header">
+              <span class="metric-name">Battery Health</span>
+              <span class="status-badge status-warning">43.3% Health</span>
+            </div>
+            <div class="metric-val" style="color: var(--accent-amber);">87%</div>
+            <div class="metric-sub">Charging (Plugged in) (19.0 minutes)</div>
+            <div class="mini-progress-bg">
+              <div class="mini-progress-fill" style="width: 87%; background: var(--accent-amber);"></div>
+            </div>
+          </div>
+
+          <div class="metric-pill-card">
+            <div class="metric-header">
+              <span class="metric-name">NVMe Root SSD</span>
+              <span class="status-badge status-good">38°C • 179 GB Free</span>
+            </div>
+            <div class="metric-val">19.4% <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Full</span></div>
+            <div class="metric-sub">43 GB used / 234 GB • Fast PCIe M.2</div>
+            <div class="mini-progress-bg">
+              <div class="mini-progress-fill" style="width: 19.4%; background: var(--accent-emerald);"></div>
+            </div>
+          </div>
+
+          <div class="metric-pill-card">
+            <div class="metric-header">
+              <span class="metric-name">1TB Seagate HDD</span>
+              <span class="status-badge status-good">37°C • 815 GB Free</span>
+            </div>
+            <div class="metric-val">3.0% <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Full</span></div>
+            <div class="metric-sub">25 GB used / 885 GB • Data Mass Storage</div>
+            <div class="mini-progress-bg">
+              <div class="mini-progress-fill" style="width: 3.0%; background: var(--accent-purple);"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Process Drill-Down & Uptime Charts -->
+    <div class="glass-card" style="margin-bottom: 36px;">
+      <div class="card-title">
+        <div class="title-left">
+          <span>📊 Interactive Process Drill-Down & Uptime Analytics</span>
+        </div>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Real-Time Memory & Lifetime Leaderboard</span>
+      </div>
+
+      <div class="charts-grid-2">
+        <div class="chart-container-box">
+          <div style="font-size: 0.85rem; font-weight: 700; color: #ffffff; margin-bottom: 8px;">
+            🥧 Memory (RAM) Distribution Across Active Apps
+          </div>
+          <canvas id="ramDistributionChart"></canvas>
+        </div>
+
+        <div class="chart-container-box">
+          <div style="font-size: 0.85rem; font-weight: 700; color: #ffffff; margin-bottom: 8px;">
+            ⏱️ Active Software Uptime Leaderboard (Hours)
+          </div>
+          <canvas id="uptimeBarChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="battery-alert-banner">
+      <div class="battery-icon-large">🔋</div>
+      <div class="battery-content" style="flex: 1;">
+        <h3>Battery Degradation Detected — 43.3% Capacity Remaining</h3>
+        <p>The battery pack holds 23.1916 Wh out of its original 53.576 Wh factory design capacity (~43.29%). Real-world unplugged runtime is ~1.2 to 1.8 hours.</p>
+        <div class="battery-stats-row">
+          <div class="stat-block">
+            <span class="stat-lbl">Factory Design Capacity</span>
+            <span class="stat-num">53.576 Wh</span>
+          </div>
+          <div class="stat-block">
+            <span class="stat-lbl">Current Full Capacity</span>
+            <span class="stat-num" style="color: var(--accent-amber);">23.1916 Wh</span>
+          </div>
+          <div class="stat-block">
+            <span class="stat-lbl">Wear & Loss Level</span>
+            <span class="stat-num" style="color: var(--accent-rose);">56.71%</span>
+          </div>
+          <div class="stat-block">
+            <span class="stat-lbl">Charging State</span>
+            <span class="stat-num" style="color: var(--accent-emerald);">87% (Charging (Plugged in))</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs-nav">
+      <button class="tab-btn active" onclick="switchTab('tab-apps', this)">
+        📦 Running Apps Drill-Down <span class="tab-count">9 Groups</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-optimizations', this)">
+        ⚡ Actionable Optimizations <span class="tab-count">8</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-hardware', this)">
+        ⚙️ Hardware & Thermals
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-ports', this)">
+        🌐 Ports & Services <span class="tab-count">5</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-specs', this)">
+        📋 Full System Specs
+      </button>
+    </div>
+
+    <!-- TAB 1: RUNNING APPS & DRILL-DOWN ACCORDIONS -->
+    <div id="tab-apps" class="tab-pane active">
+      
+      <div class="filter-bar">
+        <input type="text" id="appGroupSearch" class="search-input" placeholder="🔍 Filter software (e.g. Odysseus, Brave, Docker)..." oninput="filterAppCards()">
+        <div class="filter-buttons">
+          <button class="filter-pill active" onclick="setAppCardFilter('all', this)">All Software</button>
+          <button class="filter-pill" onclick="setAppCardFilter('foreground', this)">🖥️ Foreground UI</button>
+          <button class="filter-pill" onclick="setAppCardFilter('background', this)">⚙️ Background & Docker</button>
+        </div>
+      </div>
+
+      <div id="app-cards-container">
+        
+        <div class="glass-card app-drilldown-card" data-scope="foreground" data-name="brave web browser" style="margin-bottom: 20px; padding: 24px; ">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 2rem;">🦁</span>
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #ffffff;">Brave Web Browser</h3>
+                  <span class="status-badge" style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.4);">ACTIVE (11 Tabs)</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">Primary user web browser with isolated tab renderers, GPU compositor, and audio/network utilities.</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Status</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--accent-cyan); font-size: 1.15rem;">⏱️ 10:45:28</div>
+              </div>
+              <div style="height: 28px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">RAM Footprint</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: #ffffff; font-size: 1.15rem;">3034.3 MB</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="action-stop-btn" onclick="copyText('Close inactive background tabs or enable Memory Saver (brave://settings/system)', this)" style="margin-top: 8px;">⚡ Copy Stop Command</button>
+          
+          <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+            <div style="font-size: 0.775rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+              📊 Microservices / Subprocess Breakdown (15 Components)
+            </div>
+            <div style="overflow-x: auto; background: rgba(0,0,0,0.25); border-radius: var(--radius-sm); padding: 4px;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                  <tr style="color: var(--text-muted); font-size: 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                    <th style="padding: 6px 12px;">Component</th>
+                    <th style="padding: 6px 12px;">PID / Container</th>
+                    <th style="padding: 6px 12px;">RAM</th>
+                    <th style="padding: 6px 12px;">CPU</th>
+                    <th style="padding: 6px 12px;">State</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave Main Window</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">10926</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">820.6 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">2.2%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:45:28</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave Tab / Extension Sandbox</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">122326</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">302.4 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">1.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">02:45:34</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave Tab / Extension Sandbox</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">11058</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">299.1 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.2%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:45:27</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave Tab / Extension Sandbox</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">11130</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">277.6 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">7.8%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:45:26</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave GPU Compositor</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">10966</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">272.0 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">10.6%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:45:27</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave Tab / Extension Sandbox</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">11103</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">257.7 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">2.1%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:45:27</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave Tab / Extension Sandbox</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">140292</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">190.5 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.1%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">01:25:59</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave Network/Audio Utility</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">10967</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">161.6 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.3%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:45:27</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave Network/Audio Utility</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">11213</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">106.4 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:45:23</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave Tab / Extension Sandbox</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">161755</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">86.3 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">02:21</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave Main Window</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">10937</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">82.3 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:45:27</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave Main Window</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">10936</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">81.4 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:45:27</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave Network/Audio Utility</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">10979</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">71.1 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:45:27</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave Main Window</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">10939</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">21.7 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:45:27</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Brave Main Window</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">10917</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">3.6 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:45:28</td>
+              </tr>
+            
+                </tbody>
+              </table>
+            </div>
+          </div>
+        
+        </div>
+        
+        <div class="glass-card app-drilldown-card" data-scope="foreground" data-name="gnome desktop & window manager" style="margin-bottom: 20px; padding: 24px; ">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 2rem;">🖥️</span>
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #ffffff;">GNOME Desktop & Window Manager</h3>
+                  <span class="status-badge" style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.4);">ACTIVE (Display)</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">Core graphical display compositor, Mutter X11 window manager, and shell panels.</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Status</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--accent-cyan); font-size: 1.15rem;">⏱️ 10:53:23</div>
+              </div>
+              <div style="height: 28px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">RAM Footprint</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: #ffffff; font-size: 1.15rem;">600.6 MB</div>
+              </div>
+            </div>
+          </div>
+
+          
+          
+          <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+            <div style="font-size: 0.775rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+              📊 Microservices / Subprocess Breakdown (4 Components)
+            </div>
+            <div style="overflow-x: auto; background: rgba(0,0,0,0.25); border-radius: var(--radius-sm); padding: 4px;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                  <tr style="color: var(--text-muted); font-size: 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                    <th style="padding: 6px 12px;">Component</th>
+                    <th style="padding: 6px 12px;">PID / Container</th>
+                    <th style="padding: 6px 12px;">RAM</th>
+                    <th style="padding: 6px 12px;">CPU</th>
+                    <th style="padding: 6px 12px;">State</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">gnome-shell</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">4075</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">276.9 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">4.4%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:53:20</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">Xorg</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">3816</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">170.9 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">4.3%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:53:23</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">mutter-x11-fram</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">4101</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">133.6 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:53:20</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">gnome-shell-cal</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">4138</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">19.2 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:53:19</td>
+              </tr>
+            
+                </tbody>
+              </table>
+            </div>
+          </div>
+        
+        </div>
+        
+        <div class="glass-card app-drilldown-card" data-scope="background" data-name="gnome software center" style="margin-bottom: 20px; padding: 24px; ">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 2rem;">📦</span>
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #ffffff;">GNOME Software Center</h3>
+                  <span class="status-badge" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.4);">ACTIVE (Idle)</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">Background package & Flatpak catalog updater daemon consuming over 550 MB RAM.</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Status</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--accent-cyan); font-size: 1.15rem;">⏱️ 4.0 hrs</div>
+              </div>
+              <div style="height: 28px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">RAM Footprint</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: #ffffff; font-size: 1.15rem;">554.0 MB</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="action-stop-btn" onclick="copyText('killall gnome-software', this)" style="margin-top: 8px;">⚡ Copy Stop Command</button>
+          
+          <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+            <div style="font-size: 0.775rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+              📊 Microservices / Subprocess Breakdown (1 Components)
+            </div>
+            <div style="overflow-x: auto; background: rgba(0,0,0,0.25); border-radius: var(--radius-sm); padding: 4px;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                  <tr style="color: var(--text-muted); font-size: 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                    <th style="padding: 6px 12px;">Component</th>
+                    <th style="padding: 6px 12px;">PID / Container</th>
+                    <th style="padding: 6px 12px;">RAM</th>
+                    <th style="padding: 6px 12px;">CPU</th>
+                    <th style="padding: 6px 12px;">State</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">gnome-software --gapplication-service</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">4244</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">554.0 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">4.0 hrs</td>
+              </tr>
+            
+                </tbody>
+              </table>
+            </div>
+          </div>
+        
+        </div>
+        
+        <div class="glass-card app-drilldown-card" data-scope="background" data-name="gnome calendar sync" style="margin-bottom: 20px; padding: 24px; ">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 2rem;">📅</span>
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #ffffff;">GNOME Calendar Sync</h3>
+                  <span class="status-badge" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.4);">ACTIVE (Sync)</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">Background event polling and calendar reminders daemon.</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Status</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--accent-cyan); font-size: 1.15rem;">⏱️ 3.9 hrs</div>
+              </div>
+              <div style="height: 28px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">RAM Footprint</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: #ffffff; font-size: 1.15rem;">241.5 MB</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="action-stop-btn" onclick="copyText('killall gnome-calendar', this)" style="margin-top: 8px;">⚡ Copy Stop Command</button>
+          
+          <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+            <div style="font-size: 0.775rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+              📊 Microservices / Subprocess Breakdown (1 Components)
+            </div>
+            <div style="overflow-x: auto; background: rgba(0,0,0,0.25); border-radius: var(--radius-sm); padding: 4px;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                  <tr style="color: var(--text-muted); font-size: 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                    <th style="padding: 6px 12px;">Component</th>
+                    <th style="padding: 6px 12px;">PID / Container</th>
+                    <th style="padding: 6px 12px;">RAM</th>
+                    <th style="padding: 6px 12px;">CPU</th>
+                    <th style="padding: 6px 12px;">State</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">gnome-calendar --gapplication-service</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">101704</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">241.5 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">3.9 hrs</td>
+              </tr>
+            
+                </tbody>
+              </table>
+            </div>
+          </div>
+        
+        </div>
+        
+        <div class="glass-card app-drilldown-card" data-scope="background" data-name="streamlit antigravity dashboard" style="margin-bottom: 20px; padding: 24px; ">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 2rem;">📈</span>
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #ffffff;">Streamlit Antigravity Dashboard</h3>
+                  <span class="status-badge" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.4);">ACTIVE (:8501)</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">Developer telemetry web UI running continuously on port 8501.</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Status</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--accent-cyan); font-size: 1.15rem;">⏱️ 10.8 hrs</div>
+              </div>
+              <div style="height: 28px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">RAM Footprint</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: #ffffff; font-size: 1.15rem;">209.8 MB</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="action-stop-btn" onclick="copyText('systemctl --user stop antigravity-dashboard', this)" style="margin-top: 8px;">⚡ Copy Stop Command</button>
+          
+          <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+            <div style="font-size: 0.775rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+              📊 Microservices / Subprocess Breakdown (1 Components)
+            </div>
+            <div style="overflow-x: auto; background: rgba(0,0,0,0.25); border-radius: var(--radius-sm); padding: 4px;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                  <tr style="color: var(--text-muted); font-size: 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                    <th style="padding: 6px 12px;">Component</th>
+                    <th style="padding: 6px 12px;">PID / Container</th>
+                    <th style="padding: 6px 12px;">RAM</th>
+                    <th style="padding: 6px 12px;">CPU</th>
+                    <th style="padding: 6px 12px;">State</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">streamlit run dashboard.py --port 8501</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">3739</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">209.8 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.8%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10.8 hrs</td>
+              </tr>
+            
+                </tbody>
+              </table>
+            </div>
+          </div>
+        
+        </div>
+        
+        <div class="glass-card app-drilldown-card" data-scope="background" data-name="postgresql 16 database" style="margin-bottom: 20px; padding: 24px; ">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 2rem;">🐘</span>
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #ffffff;">PostgreSQL 16 Database</h3>
+                  <span class="status-badge" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.4);">ACTIVE (:5432)</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">Relational database cluster listening on port 5432 with 6 background worker processes.</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Status</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--accent-cyan); font-size: 1.15rem;">⏱️ 10.8 hrs</div>
+              </div>
+              <div style="height: 28px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">RAM Footprint</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: #ffffff; font-size: 1.15rem;">73.3 MB</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="action-stop-btn" onclick="copyText('sudo systemctl stop postgresql@16-main', this)" style="margin-top: 8px;">⚡ Copy Stop Command</button>
+          
+          <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+            <div style="font-size: 0.775rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+              📊 Microservices / Subprocess Breakdown (6 Components)
+            </div>
+            <div style="overflow-x: auto; background: rgba(0,0,0,0.25); border-radius: var(--radius-sm); padding: 4px;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                  <tr style="color: var(--text-muted); font-size: 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                    <th style="padding: 6px 12px;">Component</th>
+                    <th style="padding: 6px 12px;">PID / Container</th>
+                    <th style="padding: 6px 12px;">RAM</th>
+                    <th style="padding: 6px 12px;">CPU</th>
+                    <th style="padding: 6px 12px;">State</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">postgres</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">1255</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">30.0 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:53:36</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">postgres</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">1264</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">10.3 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:53:36</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">postgres</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">1261</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">8.9 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:53:36</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">postgres</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">1265</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">8.7 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:53:36</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">postgres</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">1266</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">8.0 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:53:36</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">postgres</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">1262</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">7.4 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:53:36</td>
+              </tr>
+            
+                </tbody>
+              </table>
+            </div>
+          </div>
+        
+        </div>
+        
+        <div class="glass-card app-drilldown-card" data-scope="background" data-name="ollama local llm engine" style="margin-bottom: 20px; padding: 24px; ">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 2rem;">🦙</span>
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #ffffff;">Ollama Local LLM Engine</h3>
+                  <span class="status-badge" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.4);">ACTIVE (:11434)</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">Local AI neural inference engine listening for requests on port 11434.</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Status</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--accent-cyan); font-size: 1.15rem;">⏱️ 10.8 hrs</div>
+              </div>
+              <div style="height: 28px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">RAM Footprint</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: #ffffff; font-size: 1.15rem;">34.9 MB</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="action-stop-btn" onclick="copyText('sudo systemctl stop ollama', this)" style="margin-top: 8px;">⚡ Copy Stop Command</button>
+          
+          <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+            <div style="font-size: 0.775rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+              📊 Microservices / Subprocess Breakdown (1 Components)
+            </div>
+            <div style="overflow-x: auto; background: rgba(0,0,0,0.25); border-radius: var(--radius-sm); padding: 4px;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                  <tr style="color: var(--text-muted); font-size: 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                    <th style="padding: 6px 12px;">Component</th>
+                    <th style="padding: 6px 12px;">PID / Container</th>
+                    <th style="padding: 6px 12px;">RAM</th>
+                    <th style="padding: 6px 12px;">CPU</th>
+                    <th style="padding: 6px 12px;">State</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">ollama serve</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">1240</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">34.9 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10.8 hrs</td>
+              </tr>
+            
+                </tbody>
+              </table>
+            </div>
+          </div>
+        
+        </div>
+        
+        <div class="glass-card app-drilldown-card" data-scope="background" data-name="cups print spooler" style="margin-bottom: 20px; padding: 24px; ">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 2rem;">🖨️</span>
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #ffffff;">CUPS Print Spooler</h3>
+                  <span class="status-badge" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.4);">ACTIVE (:631)</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">Local printer discovery & IPP broadcasting on port 631.</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Status</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--accent-cyan); font-size: 1.15rem;">⏱️ 10.8 hrs</div>
+              </div>
+              <div style="height: 28px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">RAM Footprint</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: #ffffff; font-size: 1.15rem;">31.6 MB</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="action-stop-btn" onclick="copyText('sudo systemctl disable --now cups cups-browsed', this)" style="margin-top: 8px;">⚡ Copy Stop Command</button>
+          
+          <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+            <div style="font-size: 0.775rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+              📊 Microservices / Subprocess Breakdown (2 Components)
+            </div>
+            <div style="overflow-x: auto; background: rgba(0,0,0,0.25); border-radius: var(--radius-sm); padding: 4px;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                  <tr style="color: var(--text-muted); font-size: 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                    <th style="padding: 6px 12px;">Component</th>
+                    <th style="padding: 6px 12px;">PID / Container</th>
+                    <th style="padding: 6px 12px;">RAM</th>
+                    <th style="padding: 6px 12px;">CPU</th>
+                    <th style="padding: 6px 12px;">State</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">cups-browsed</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">1539</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">19.6 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:53:30</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">cupsd</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">1228</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #f8fafc; font-weight: 600;">12.0 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">10:53:36</td>
+              </tr>
+            
+                </tbody>
+              </table>
+            </div>
+          </div>
+        
+        </div>
+        
+        <div class="glass-card app-drilldown-card" data-scope="background" data-name="odysseus docker ai stack" style="margin-bottom: 20px; padding: 24px; border-color: rgba(16, 185, 129, 0.4);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 2rem;">🐳</span>
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #ffffff;">Odysseus Docker AI Stack</h3>
+                  <span class="status-badge" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4);">STOPPED / EXITED ✅</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">Odysseus stack successfully stopped (Exited)! 920 MB RAM and CPU cycles are fully freed.</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Status</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--accent-emerald); font-size: 1.15rem;">⏱️ Stopped (0s)</div>
+              </div>
+              <div style="height: 28px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">RAM Footprint</div>
+                <div style="font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--accent-emerald); font-size: 1.15rem;">0.0 MB</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="action-stop-btn" onclick="copyText('docker start odysseus-odysseus-1 odysseus-searxng-1 odysseus-chromadb-1 odysseus-ntfy-1', this)" style="margin-top: 8px;">▶️ Copy Restart Command</button>
+          
+          <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+            <div style="font-size: 0.775rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+              📊 Microservices / Subprocess Breakdown (4 Components)
+            </div>
+            <div style="overflow-x: auto; background: rgba(0,0,0,0.25); border-radius: var(--radius-sm); padding: 4px;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                  <tr style="color: var(--text-muted); font-size: 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                    <th style="padding: 6px 12px;">Component</th>
+                    <th style="padding: 6px 12px;">PID / Container</th>
+                    <th style="padding: 6px 12px;">RAM</th>
+                    <th style="padding: 6px 12px;">CPU</th>
+                    <th style="padding: 6px 12px;">State</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">odysseus-odysseus-1 (FastAPI Backend)</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">Exited</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #10b981; font-weight: 600;">0.0 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">Stopped</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">odysseus-searxng-1 (SearXNG Engine)</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">Exited</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #10b981; font-weight: 600;">0.0 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">Stopped</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">odysseus-chromadb-1 (ChromaDB Vector)</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">Exited</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #10b981; font-weight: 600;">0.0 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">Stopped</td>
+              </tr>
+            
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem;">
+                <td style="padding: 8px 12px; color: #ffffff;">odysseus-ntfy-1 (ntfy Notification)</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: var(--text-muted);">Exited</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #10b981; font-weight: 600;">0.0 MB</td>
+                <td style="padding: 8px 12px; font-family: 'JetBrains Mono'; color: #38bdf8;">0.0%</td>
+                <td style="padding: 8px 12px; color: var(--text-secondary);">Stopped</td>
+              </tr>
+            
+                </tbody>
+              </table>
+            </div>
+          </div>
+        
+        </div>
+        
+      </div>
+
+    </div>
+
+    <!-- TAB 2: ACTIONABLE OPTIMIZATION CHECKLIST -->
+    <div id="tab-optimizations" class="tab-pane">
+      
+      <div style="margin-bottom: 24px;">
+        <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 4px;">
+          Recommended Optimization Actions & Unnecessary Daemons
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+          Click "Copy Command" to quickly stop individual background resource hogs, or use the master command at the bottom to perform all remaining safe cleanups.
+        </p>
+      </div>
+
+      <div id="opt-cards-container">
+        
+        <div class="opt-card" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.04);">
+          <div class="opt-header">
+            <div class="opt-title-group">
+              <span class="opt-priority-tag status-good">✅ Completed</span>
+              <div class="opt-title">Odysseus Docker AI Stack Status</div>
+            </div>
+            <div class="opt-savings-badge" style="background: rgba(16, 185, 129, 0.2);">✅ 920 MB RAM Freed & Stopped</div>
+          </div>
+          <div class="opt-desc">The 4 Odysseus Docker containers (FastAPI, SearXNG, ChromaDB, ntfy) are now successfully stopped and exited! 920MB RAM and CPU cycles have been returned to the system. <em>(Stack is stopped. To restart whenever you want, run the start command.)</em></div>
+          <div class="terminal-box">
+            <div class="terminal-code">$ docker start odysseus-odysseus-1 odysseus-searxng-1 odysseus-chromadb-1 odysseus-ntfy-1</div>
+            <button class="copy-btn" onclick="copyText('docker start odysseus-odysseus-1 odysseus-searxng-1 odysseus-chromadb-1 odysseus-ntfy-1', this)">
+              📋 Copy Restart Command
+            </button>
+          </div>
+        </div>
+        
+        <div class="opt-card" style="">
+          <div class="opt-header">
+            <div class="opt-title-group">
+              <span class="opt-priority-tag prio-high">High Priority</span>
+              <div class="opt-title">Terminate GNOME Software Center Background Daemon</div>
+            </div>
+            <div class="opt-savings-badge" style="">~554 MB RAM Reclaimed Instantly</div>
+          </div>
+          <div class="opt-desc">The GNOME Software Center maintains a persistent background daemon (`gnome-software --gapplication-service`) that caches store catalogs in active memory. <em>(Completely safe. Automatically restarts on demand when opened.)</em></div>
+          <div class="terminal-box">
+            <div class="terminal-code">$ killall gnome-software</div>
+            <button class="copy-btn" onclick="copyText('killall gnome-software', this)">
+              📋 Copy Command
+            </button>
+          </div>
+        </div>
+        
+        <div class="opt-card" style="">
+          <div class="opt-header">
+            <div class="opt-title-group">
+              <span class="opt-priority-tag prio-med">Medium Priority</span>
+              <div class="opt-title">Stop Background Streamlit Telemetry Dashboard</div>
+            </div>
+            <div class="opt-savings-badge" style="">~210 MB RAM + Port 8501 Freed</div>
+          </div>
+          <div class="opt-desc">Streamlit runs an active telemetry dashboard web server on port 8501. <em>(Start on demand with `systemctl --user start antigravity-dashboard`.)</em></div>
+          <div class="terminal-box">
+            <div class="terminal-code">$ systemctl --user stop antigravity-dashboard</div>
+            <button class="copy-btn" onclick="copyText('systemctl --user stop antigravity-dashboard', this)">
+              📋 Copy Command
+            </button>
+          </div>
+        </div>
+        
+        <div class="opt-card" style="">
+          <div class="opt-header">
+            <div class="opt-title-group">
+              <span class="opt-priority-tag prio-med">Medium Priority</span>
+              <div class="opt-title">Stop Ollama Local AI Inference Server</div>
+            </div>
+            <div class="opt-savings-badge" style="">Background RAM & Port 11434 Freed</div>
+          </div>
+          <div class="opt-desc">Ollama server daemon runs continuously listening on port 11434. <em>(Start anytime with `sudo systemctl start ollama`.)</em></div>
+          <div class="terminal-box">
+            <div class="terminal-code">$ sudo systemctl stop ollama</div>
+            <button class="copy-btn" onclick="copyText('sudo systemctl stop ollama', this)">
+              📋 Copy Command
+            </button>
+          </div>
+        </div>
+        
+        <div class="opt-card" style="">
+          <div class="opt-header">
+            <div class="opt-title-group">
+              <span class="opt-priority-tag prio-low">Low Priority</span>
+              <div class="opt-title">Stop PostgreSQL 16 Database Server</div>
+            </div>
+            <div class="opt-savings-badge" style="">~73 MB RAM + Port 5432 Closed</div>
+          </div>
+          <div class="opt-desc">PostgreSQL database cluster is actively listening on localhost:5432. <em>(Start with `sudo systemctl start postgresql@16-main`.)</em></div>
+          <div class="terminal-box">
+            <div class="terminal-code">$ sudo systemctl stop postgresql@16-main</div>
+            <button class="copy-btn" onclick="copyText('sudo systemctl stop postgresql@16-main', this)">
+              📋 Copy Command
+            </button>
+          </div>
+        </div>
+        
+        <div class="opt-card" style="">
+          <div class="opt-header">
+            <div class="opt-title-group">
+              <span class="opt-priority-tag prio-low">Low Priority</span>
+              <div class="opt-title">Disable CUPS Print Spooler Daemons</div>
+            </div>
+            <div class="opt-savings-badge" style="">2 Daemons Stopped + Port 631 Closed</div>
+          </div>
+          <div class="opt-desc">CUPS continually scans local network subnets for IPP printers. <em>(Safe if no printer is attached. Re-enable with `sudo systemctl enable --now cups`.)</em></div>
+          <div class="terminal-box">
+            <div class="terminal-code">$ sudo systemctl stop cups cups-browsed && sudo systemctl disable cups cups-browsed</div>
+            <button class="copy-btn" onclick="copyText('sudo systemctl stop cups cups-browsed && sudo systemctl disable cups cups-browsed', this)">
+              📋 Copy Command
+            </button>
+          </div>
+        </div>
+        
+        <div class="opt-card" style="">
+          <div class="opt-header">
+            <div class="opt-title-group">
+              <span class="opt-priority-tag prio-low">Low Priority</span>
+              <div class="opt-title">Disable ModemManager on Wi-Fi Laptop</div>
+            </div>
+            <div class="opt-savings-badge" style="">Faster Boot & Cleaner Service Table</div>
+          </div>
+          <div class="opt-desc">ModemManager scans for non-existent cellular 4G/5G modems. <em>(Wi-Fi, Bluetooth, and Ethernet are unaffected.)</em></div>
+          <div class="terminal-box">
+            <div class="terminal-code">$ sudo systemctl disable --now ModemManager</div>
+            <button class="copy-btn" onclick="copyText('sudo systemctl disable --now ModemManager', this)">
+              📋 Copy Command
+            </button>
+          </div>
+        </div>
+        
+        <div class="opt-card" style="">
+          <div class="opt-header">
+            <div class="opt-title-group">
+              <span class="opt-priority-tag prio-med">Medium Priority</span>
+              <div class="opt-title">Clean Systemd Journal Logs and Package Cache</div>
+            </div>
+            <div class="opt-savings-badge" style="">1.5 - 3.0 GB NVMe Storage Reclaimed</div>
+          </div>
+          <div class="opt-desc">Old system journal logs and cached apt archives accumulate on the root drive. <em>(Safe standard maintenance retaining the most recent 100MB logs.)</em></div>
+          <div class="terminal-box">
+            <div class="terminal-code">$ sudo journalctl --vacuum-size=100M && sudo apt-get clean && sudo apt-get autoremove -y</div>
+            <button class="copy-btn" onclick="copyText('sudo journalctl --vacuum-size=100M && sudo apt-get clean && sudo apt-get autoremove -y', this)">
+              📋 Copy Command
+            </button>
+          </div>
+        </div>
+        
+      </div>
+
+      <div class="master-script-box">
+        <div class="master-script-header">
+          <div>
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 4px;">
+              🚀 Master One-Click Optimization Command
+            </h3>
+            <p style="color: var(--text-secondary); font-size: 0.875rem;">
+              Combines all remaining safe background process terminations and cache vacuuming into a single terminal run.
+            </p>
+          </div>
+          <button class="btn btn-primary" onclick="copyMasterCleanup()">
+            📋 Copy Complete Script
+          </button>
+        </div>
+        <div class="terminal-box" style="background: #040711; border-color: rgba(99, 102, 241, 0.4);">
+          <pre id="master-cleanup-text" class="terminal-code" style="padding: 6px 0; color: #7dd3fc; line-height: 1.6;">killall gnome-software && \
+  systemctl --user stop antigravity-dashboard && \
+  sudo systemctl stop ollama && \
+  sudo systemctl stop postgresql@16-main && \
+  sudo systemctl stop cups cups-browsed && sudo systemctl disable cups cups-browsed && \
+  sudo systemctl disable --now ModemManager && \
+  sudo journalctl --vacuum-size=100M && sudo apt-get clean && sudo apt-get autoremove -y</pre>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 3: HARDWARE & THERMALS -->
+    <div id="tab-hardware" class="tab-pane">
+      <div class="section-grid-2">
+        <div class="glass-card">
+          <div class="card-title">
+            <div class="title-left"><span>🔥 Processor & Thermals</span></div>
+            <span class="status-badge status-good">73.0°C (Safe)</span>
+          </div>
+          <div class="spec-list">
+            <div class="spec-row"><span class="spec-label">Processor</span><span class="spec-value">Intel(R) Core(TM) i5-9300H CPU @ 2.40GHz (Coffee Lake)</span></div>
+            <div class="spec-row"><span class="spec-label">Architecture</span><span class="spec-value">4 Cores / 8 Threads</span></div>
+            <div class="spec-row"><span class="spec-label">Clocks</span><span class="spec-value">Base: 2.40 GHz | Boost: 4.10 GHz</span></div>
+            <div class="spec-row"><span class="spec-label">Package Temp</span><span class="spec-value" style="color: var(--accent-emerald);">73.0°C (TjMax 100°C)</span></div>
+            <div class="spec-row"><span class="spec-label">Governor</span><span class="spec-value">powersave</span></div>
+            <div class="spec-row"><span class="spec-label">Thermal Headroom</span><span class="spec-value" style="color: var(--accent-emerald);">27.0°C Safety Margin</span></div>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-title">
+            <div class="title-left"><span>🎮 Graphics (Dual GPU Setup)</span></div>
+            <span class="status-badge status-good">NVIDIA Turing Active</span>
+          </div>
+          <div class="spec-list">
+            <div class="spec-row"><span class="spec-label">Dedicated GPU (dGPU)</span><span class="spec-value">NVIDIA GeForce GTX 1650 Mobile / Max-Q</span></div>
+            <div class="spec-row"><span class="spec-label">VRAM & Driver</span><span class="spec-value">4096 MB (4 GB GDDR5/6) | Driver 580.173.02 (NVIDIA Proprietary)</span></div>
+            <div class="spec-row"><span class="spec-label">GPU Temperature</span><span class="spec-value" style="color: var(--accent-emerald);">39°C (Ice Cold Idle)</span></div>
+            <div class="spec-row"><span class="spec-label">Power Draw</span><span class="spec-value">2 W / 30 W TDP</span></div>
+            <div class="spec-row"><span class="spec-label">Integrated GPU (iGPU)</span><span class="spec-value">Intel UHD Graphics 630</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card" style="margin-bottom: 24px;">
+        <div class="card-title">
+          <div class="title-left"><span>💾 Drives & Partitions Health</span></div>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">NVMe PCIe + 2.5" SATA HDD</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px;">
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div style="font-weight: 700; font-size: 1.1rem; color: #ffffff;">🚀 Western Digital / Micron 256GB NVMe SSD</div>
+              <span class="status-badge status-good">37.9°C</span>
+            </div>
+            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 14px;">
+              Mounted at <strong>/</strong> (Root System) • 43 GB used of 234 GB (256 GB raw) (179 GB free)
+            </div>
+            <div class="mini-progress-bg" style="height: 10px; margin-bottom: 8px;">
+              <div class="mini-progress-fill" style="width: 19.4%; background: var(--accent-emerald);"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.775rem; color: var(--text-muted);">
+              <span>19.4% Used</span>
+              <span style="color: var(--accent-emerald); font-weight: 600;">80.6% Available (179 GB)</span>
+            </div>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div style="font-weight: 700; font-size: 1.1rem; color: #ffffff;">💽 Seagate ST1000LM049-2GH172</div>
+              <span class="status-badge status-good">36.9°C</span>
+            </div>
+            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 14px;">
+              Mounted at <strong>/mnt/data</strong> (Secondary HDD) • 25 GB used of 885 GB (1000 GB / 1 TB raw) (815 GB free)
+            </div>
+            <div class="mini-progress-bg" style="height: 10px; margin-bottom: 8px;">
+              <div class="mini-progress-fill" style="width: 3.0%; background: var(--accent-purple);"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.775rem; color: var(--text-muted);">
+              <span>3.0% Used</span>
+              <span style="color: var(--accent-purple); font-weight: 600;">97.0% Available (815 GB)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: PORTS & SERVICES -->
+    <div id="tab-ports" class="tab-pane">
+      <div class="glass-card">
+        <div class="card-title">
+          <div class="title-left"><span>🌐 Open Local Network Ports & Active Daemons</span></div>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">5 Listening Sockets</span>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Port</th>
+                <th>Protocol</th>
+                <th>Service / Application</th>
+                <th>Responsible Process</th>
+                <th>Security & Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              
+              <tr>
+                <td><span style="font-family: 'JetBrains Mono'; font-weight: 700; color: #38bdf8; font-size: 0.95rem;">:8501</span></td>
+                <td><span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TCP</span></td>
+                <td><strong style="color: #ffffff;">Streamlit Telemetry UI</strong></td>
+                <td><span style="font-family: 'JetBrains Mono'; font-size: 0.8rem; color: var(--text-secondary);">antigravity-dashboard</span></td>
+                <td><span style="font-size: 0.825rem; color: var(--text-secondary);">Internal developer telemetry dashboard</span></td>
+              </tr>
+        
+              <tr>
+                <td><span style="font-family: 'JetBrains Mono'; font-weight: 700; color: #38bdf8; font-size: 0.95rem;">:11434</span></td>
+                <td><span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TCP</span></td>
+                <td><strong style="color: #ffffff;">Ollama Local LLM API</strong></td>
+                <td><span style="font-family: 'JetBrains Mono'; font-size: 0.8rem; color: var(--text-secondary);">ollama.service</span></td>
+                <td><span style="font-size: 0.825rem; color: var(--text-secondary);">Local AI inference endpoint</span></td>
+              </tr>
+        
+              <tr>
+                <td><span style="font-family: 'JetBrains Mono'; font-weight: 700; color: #38bdf8; font-size: 0.95rem;">:5432</span></td>
+                <td><span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TCP</span></td>
+                <td><strong style="color: #ffffff;">PostgreSQL 16 Database</strong></td>
+                <td><span style="font-family: 'JetBrains Mono'; font-size: 0.8rem; color: var(--text-secondary);">postgresql@16-main</span></td>
+                <td><span style="font-size: 0.825rem; color: var(--text-secondary);">Local relational SQL server</span></td>
+              </tr>
+        
+              <tr>
+                <td><span style="font-family: 'JetBrains Mono'; font-weight: 700; color: #38bdf8; font-size: 0.95rem;">:631</span></td>
+                <td><span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TCP</span></td>
+                <td><strong style="color: #ffffff;">CUPS IPP Print Server</strong></td>
+                <td><span style="font-family: 'JetBrains Mono'; font-size: 0.8rem; color: var(--text-secondary);">cups.service</span></td>
+                <td><span style="font-size: 0.825rem; color: var(--text-secondary);">Local printer spooler (Safe to close)</span></td>
+              </tr>
+        
+              <tr>
+                <td><span style="font-family: 'JetBrains Mono'; font-weight: 700; color: #38bdf8; font-size: 0.95rem;">:53</span></td>
+                <td><span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TCP/UDP</span></td>
+                <td><strong style="color: #ffffff;">systemd-resolved DNS Stub</strong></td>
+                <td><span style="font-family: 'JetBrains Mono'; font-size: 0.8rem; color: var(--text-secondary);">systemd-resolved</span></td>
+                <td><span style="font-size: 0.825rem; color: var(--text-secondary);">Local OS DNS caching resolver</span></td>
+              </tr>
+        
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: SPECS -->
+    <div id="tab-specs" class="tab-pane">
+      <div class="section-grid-2">
+        <div class="glass-card">
+          <div class="card-title"><div class="title-left"><span>💻 Laptop & Motherboard Architecture</span></div></div>
+          <div class="spec-list">
+            <div class="spec-row"><span class="spec-label">Manufacturer</span><span class="spec-value">Acer</span></div>
+            <div class="spec-row"><span class="spec-label">Product Name</span><span class="spec-value">Nitro AN515-54</span></div>
+            <div class="spec-row"><span class="spec-label">Family</span><span class="spec-value">Nitro 5</span></div>
+            <div class="spec-row"><span class="spec-label">BIOS Firmware</span><span class="spec-value">V1.33 (11/17/2020)</span></div>
+            <div class="spec-row"><span class="spec-label">Operating System</span><span class="spec-value">Zorin OS 17.2 (Ubuntu 22.04.5 LTS / Jammy Jellyfish)</span></div>
+            <div class="spec-row"><span class="spec-label">Linux Kernel</span><span class="spec-value">7.0.0-28-generic</span></div>
+            <div class="spec-row"><span class="spec-label">Desktop Environment</span><span class="spec-value">zorin:GNOME</span></div>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-title"><div class="title-left"><span>🧠 Memory & Virtual Swap Subsystem</span></div></div>
+          <div class="spec-list">
+            <div class="spec-row"><span class="spec-label">Installed Physical RAM</span><span class="spec-value">15.45 GB Dual-Channel</span></div>
+            <div class="spec-row"><span class="spec-label">Currently Used RAM</span><span class="spec-value">3.62 GB (23.4%)</span></div>
+            <div class="spec-row"><span class="spec-label">Available Headroom</span><span class="spec-value" style="color: var(--accent-emerald);">11.84 GB (76.6%)</span></div>
+            <div class="spec-row"><span class="spec-label">OS Buffer & Page Cache</span><span class="spec-value">5.49 GB Cached</span></div>
+            <div class="spec-row"><span class="spec-label">Swap Partition</span><span class="spec-value">/dev/sda1 (on 1TB SATA HDD)</span></div>
+            <div class="spec-row"><span class="spec-label">Swap Utilization</span><span class="spec-value" style="color: var(--accent-emerald);">0.0 GB (0% Swap Pressure)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer style="margin-top: 48px; text-align: center; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border-subtle); padding-top: 24px;">
+      Generated for <strong>saransh</strong> • Acer Nitro AN515-54 System Health Auditor • All diagnostics captured live directly from Linux sysfs, UPower, hwmon & systemd.
+    </footer>
+
+  </div>
+
+  <div id="toast">
+    <span>✅</span>
+    <span id="toast-msg">Command copied to clipboard!</span>
+  </div>
+
+  <script>
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    function copyText(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const origText = btn.innerHTML;
+        btn.innerHTML = '✅ Copied!';
+        btn.classList.add('copied');
+        showToast('Command copied: ' + text.substring(0, 45) + (text.length > 45 ? '...' : ''));
+        setTimeout(() => { btn.innerHTML = origText; btn.classList.remove('copied'); }, 2200);
+      }).catch(err => { showToast('Failed to copy: ' + err); });
+    }
+
+    function copyMasterCleanup() {
+      const scriptText = document.getElementById('master-cleanup-text').innerText;
+      navigator.clipboard.writeText(scriptText).then(() => {
+        showToast('⚡ All optimization commands copied to clipboard!');
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); }, 3000);
+    }
+
+    let currentCardFilter = 'all';
+
+    function setAppCardFilter(filter, el) {
+      document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+      el.classList.add('active');
+      currentCardFilter = filter;
+      filterAppCards();
+    }
+
+    function filterAppCards() {
+      const query = document.getElementById('appGroupSearch').value.toLowerCase();
+      const cards = document.querySelectorAll('.app-drilldown-card');
+
+      cards.forEach(card => {
+        const name = card.getAttribute('data-name');
+        const scope = card.getAttribute('data-scope');
+        let matchesSearch = name.includes(query);
+        let matchesFilter = (currentCardFilter === 'all') || (scope === currentCardFilter);
+        card.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const ctxRam = document.getElementById('ramDistributionChart').getContext('2d');
+      new Chart(ctxRam, {
+        type: 'doughnut',
+        data: {
+          labels: ["Brave Web Browser", "GNOME Desktop & Window Manager", "GNOME Software Center", "GNOME Calendar Sync", "Streamlit Antigravity Dashboard", "PostgreSQL 16 Database", "Ollama Local LLM Engine", "CUPS Print Spooler"],
+          datasets: [{
+            data: [3034.3, 600.6, 554.0, 241.5, 209.8, 73.3, 34.9, 31.6],
+            backgroundColor: ["#6366f1", "#06b6d4", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#3b82f6", "#14b8a6", "#f43f5e"],
+            borderWidth: 0,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 }, boxWidth: 12, padding: 8 }
+            },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` ${ctx.label}: ${ctx.raw} MB RAM`
+              }
+            }
+          }
+        }
+      });
+
+      const ctxUptime = document.getElementById('uptimeBarChart').getContext('2d');
+      new Chart(ctxUptime, {
+        type: 'bar',
+        data: {
+          labels: ["GNOME Desktop", "Brave Web Browser", "Streamlit Antigravity Dashboard", "PostgreSQL 16 Database", "Ollama Local LLM Engine", "CUPS Print Spooler"],
+          datasets: [{
+            label: 'Hours Running Active',
+            data: [10.9, 10.8, 10.8, 10.8, 10.8, 10.8],
+            backgroundColor: ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` Active: ${ctx.raw} hrs since boot`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#94a3b8', font: { family: 'Inter', size: 10 }, callback: (val) => val + 'h' }
+            },
+            y: {
+              grid: { display: false },
+              ticks: { color: '#ffffff', font: { family: 'Inter', size: 11 } }
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
