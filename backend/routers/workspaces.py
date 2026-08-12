@@ -1,5 +1,6 @@
 import logging
 import re
+import uuid
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -41,7 +42,7 @@ async def list_workspaces(db: AsyncSession = Depends(get_db)):
     return result.scalars().all()
 
 @router.get("/{workspace_id}", response_model=WorkspaceResponse)
-async def get_workspace(workspace_id: str, db: AsyncSession = Depends(get_db)):
+async def get_workspace(workspace_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Workspace).where(Workspace.id == workspace_id, Workspace.is_active == True))
     workspace = result.scalar_one_or_none()
     if not workspace:
@@ -49,7 +50,7 @@ async def get_workspace(workspace_id: str, db: AsyncSession = Depends(get_db)):
     return workspace
 
 @router.patch("/{workspace_id}", response_model=WorkspaceResponse)
-async def update_workspace(workspace_id: str, workspace_update: WorkspaceUpdate, db: AsyncSession = Depends(get_db)):
+async def update_workspace(workspace_id: uuid.UUID, workspace_update: WorkspaceUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Workspace).where(Workspace.id == workspace_id, Workspace.is_active == True))
     workspace = result.scalar_one_or_none()
     if not workspace:
@@ -67,7 +68,7 @@ async def update_workspace(workspace_id: str, workspace_update: WorkspaceUpdate,
     return workspace
 
 @router.delete("/{workspace_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_workspace(workspace_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_workspace(workspace_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Workspace).where(Workspace.id == workspace_id))
     workspace = result.scalar_one_or_none()
     if not workspace:

@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict, Any
+from uuid import UUID
+from datetime import datetime, date
 
 class WorkspaceCreate(BaseModel):
     name: str
@@ -16,19 +18,19 @@ class WorkspaceUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 class WorkspaceResponse(BaseModel):
-    id: str
+    id: UUID
     name: str
     slug: str
     persona_type: str
     config: Dict[str, Any]
     is_active: bool
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 class EntityCreate(BaseModel):
-    workspace_id: str
+    workspace_id: UUID
     entity_type: str
     title: str
     data: Optional[Dict[str, Any]] = Field(default_factory=dict)
@@ -44,16 +46,16 @@ class EntityUpdate(BaseModel):
     status: Optional[str] = None
 
 class EntityResponse(BaseModel):
-    id: str
-    workspace_id: str
+    id: UUID
+    workspace_id: UUID
     entity_type: str
     title: str
     data: Dict[str, Any]
     tags: List[str]
     source: str
     status: str
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -64,7 +66,7 @@ class EntityListResponse(BaseModel):
     size: int = 50
 
 class MetricDefinitionCreate(BaseModel):
-    workspace_id: str
+    workspace_id: UUID
     key: str
     label: str
     metric_type: Optional[str] = 'counter'
@@ -84,44 +86,44 @@ class MetricDefinitionUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 class MetricDefinitionResponse(BaseModel):
-    id: str
-    workspace_id: str
+    id: UUID
+    workspace_id: UUID
     key: str
     label: str
     metric_type: str
     default_target: int
-    icon: Optional[str]
-    color: Optional[str]
+    icon: Optional[str] = None
+    color: Optional[str] = None
     sort_order: int
     is_active: bool
 
     model_config = ConfigDict(from_attributes=True)
 
 class DailyTrackerUpdate(BaseModel):
-    workspace_id: str
+    workspace_id: UUID
     metrics: Optional[Dict[str, Any]] = None
     targets: Optional[Dict[str, Any]] = None
 
 class DailyTrackerResponse(BaseModel):
-    id: str
-    workspace_id: str
-    date: str
+    id: UUID
+    workspace_id: UUID
+    date: date
     metrics: Dict[str, Any]
     targets: Dict[str, Any]
-    updated_at: Optional[str] = None
+    updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 class IngestionLogResponse(BaseModel):
-    id: str
-    workspace_id: str
+    id: UUID
+    workspace_id: UUID
     source_type: str
-    source_name: Optional[str]
+    source_name: Optional[str] = None
     records_processed: int
     records_failed: int
     status: str
-    error_detail: Optional[str]
-    started_at: Optional[str] = None
-    completed_at: Optional[str] = None
+    error_detail: Optional[str] = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)

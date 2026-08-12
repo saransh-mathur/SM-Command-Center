@@ -6,6 +6,8 @@ import { LogsWidget } from './LogsWidget';
 import { Q1ControllableInputs } from '@/components/quadrants/Q1ControllableInputs';
 import { YouTubeCreatorWidget } from './YouTubeCreatorWidget';
 import { ECommerceWidget } from './ECommerceWidget';
+import { MetricTrackerWidget, MarkdownNoteViewer, AgenticChat } from '@/components/widgets/DynamicWidgets';
+import { LLMControlWidget } from '@/components/widgets/LLMControlWidget';
 
 export interface WidgetRegistryItem {
   id: string;
@@ -63,5 +65,25 @@ export const WIDGET_REGISTRY: Record<string, WidgetRegistryItem> = {
     id: 'e-commerce',
     component: ECommerceWidget,
     defaultClassName: 'bg-[#121215] rounded-lg p-4 border flex flex-col'
+  },
+  'metric-tracker': {
+    id: 'metric-tracker',
+    component: MetricTrackerWidget,
+    defaultClassName: 'bg-[#121215] rounded-xl border border-zinc-800/50 flex flex-col overflow-hidden'
+  },
+  'markdown-notes': {
+    id: 'markdown-notes',
+    component: MarkdownNoteViewer,
+    defaultClassName: 'bg-[#121215] rounded-xl border border-zinc-800/50 flex flex-col overflow-hidden'
+  },
+  'agent-chat': {
+    id: 'agent-chat',
+    component: AgenticChat,
+    defaultClassName: 'bg-[#121215] rounded-xl border border-zinc-800/50 flex flex-col overflow-hidden'
+  },
+  'llm-control': {
+    id: 'llm-control',
+    component: LLMControlWidget,
+    defaultClassName: 'bg-[#121215] rounded-xl border border-zinc-800/50 flex flex-col overflow-hidden'
   }
 };

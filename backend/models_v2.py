@@ -1,6 +1,8 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Boolean, DateTime, Integer, Date, Text, ForeignKey, JSON, Index, UniqueConstraint, Uuid
+from sqlalchemy import Column, String, Boolean, DateTime, Integer, Date, Text, ForeignKey, JSON, Index, UniqueConstraint, Uuid, func
+from sqlalchemy.dialects.postgresql import JSONB
+from pgvector.sqlalchemy import Vector
 from database import Base
 
 class Workspace(Base):
@@ -14,7 +16,7 @@ class Workspace(Base):
     name = Column(String(255), nullable=False)
     slug = Column(String(128), unique=True, index=True, nullable=False)
     persona_type = Column(String(64), default='custom', index=True)
-    config = Column(JSON, default=dict, nullable=False)
+    config = Column(JSON().with_variant(JSONB, 'postgresql'), default=dict, nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -35,15 +37,15 @@ class Entity(Base):
     workspace_id = Column(Uuid, ForeignKey('workspaces.id'), index=True, nullable=False)
     entity_type = Column(String(64), index=True, nullable=False)
     title = Column(String(512), nullable=False)
-    data = Column(JSON, default=dict, nullable=False)
-    tags = Column(JSON, default=list)
+    data = Column(JSON().with_variant(JSONB, 'postgresql'), default=dict, nullable=False)
+    tags = Column(JSON().with_variant(JSONB, 'postgresql'), default=list)
     source = Column(String(64), default='manual')
     status = Column(String(32), default='active', index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
-    # Placeholder for pgvector embedding column
-    # embedding = Column(Vector(1536))
+    # pgvector embedding column
+    embedding = Column(Vector(1536))
 
     __table_args__ = (
         Index('ix_entities_workspace_type', 'workspace_id', 'entity_type'),
@@ -90,9 +92,9 @@ class DailyTracker(Base):
     id = Column(Uuid, primary_key=True, default=uuid.uuid4)
     workspace_id = Column(Uuid, ForeignKey('workspaces.id'), nullable=False)
     date = Column(Date, nullable=False)
-    metrics = Column(JSON, default=dict, nullable=False)
-    targets = Column(JSON, default=dict, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    metrics = Column(JSON().with_variant(JSONB, 'postgresql'), default=dict, nullable=False)
+    targets = Column(JSON().with_variant(JSONB, 'postgresql'), default=dict, nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     __table_args__ = (
         UniqueConstraint('workspace_id', 'date', name='uq_tracker_workspace_date'),

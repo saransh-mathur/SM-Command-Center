@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from database import init_db
 from routers import telemetry, system, containers, state, mba, app_state, setup_config, auth
-from routers import workspaces, entities, metrics
+from routers import workspaces, entities, metrics, ingestion
 
 # Configure Logging
 logging.basicConfig(
@@ -59,6 +59,7 @@ app.include_router(auth.router, prefix=settings.API_PREFIX)
 app.include_router(workspaces.router, prefix=settings.API_PREFIX)
 app.include_router(entities.router, prefix=settings.API_PREFIX)
 app.include_router(metrics.router, prefix=settings.API_PREFIX)
+app.include_router(ingestion.router, prefix=settings.API_PREFIX)
 
 @app.get("/")
 async def root():

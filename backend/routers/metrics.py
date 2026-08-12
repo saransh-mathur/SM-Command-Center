@@ -1,5 +1,6 @@
 import logging
 import datetime
+import uuid
 from typing import List, Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -19,7 +20,7 @@ logger = logging.getLogger('command_center.routers.metrics')
 router = APIRouter(prefix="/metrics", tags=["Dynamic Metrics"])
 
 class MetricIncrementRequest(BaseModel):
-    workspace_id: str
+    workspace_id: uuid.UUID
     metric_key: str
 
 # Metric Definitions
@@ -32,7 +33,7 @@ async def create_metric_definition(definition_in: MetricDefinitionCreate, db: As
     return definition
 
 @router.get("/definitions", response_model=List[MetricDefinitionResponse])
-async def list_metric_definitions(workspace_id: str, db: AsyncSession = Depends(get_db)):
+async def list_metric_definitions(workspace_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     query = select(MetricDefinition).where(
         and_(
             MetricDefinition.workspace_id == workspace_id,
@@ -44,7 +45,7 @@ async def list_metric_definitions(workspace_id: str, db: AsyncSession = Depends(
 
 @router.patch("/definitions/{definition_id}", response_model=MetricDefinitionResponse)
 async def update_metric_definition(
-    definition_id: str, 
+    definition_id: uuid.UUID, 
     definition_update: MetricDefinitionUpdate, 
     db: AsyncSession = Depends(get_db)
 ):
@@ -61,7 +62,7 @@ async def update_metric_definition(
     return definition
 
 @router.delete("/definitions/{definition_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_metric_definition(definition_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_metric_definition(definition_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(MetricDefinition).where(MetricDefinition.id == definition_id))
     definition = result.scalar_one_or_none()
     if not definition:
@@ -73,7 +74,7 @@ async def delete_metric_definition(definition_id: str, db: AsyncSession = Depend
 
 # Daily Tracker
 @router.get("/daily", response_model=DailyTrackerResponse)
-async def get_daily_tracker(workspace_id: str, db: AsyncSession = Depends(get_db)):
+async def get_daily_tracker(workspace_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     today = datetime.date.today()
     query = select(DailyTracker).where(
         and_(DailyTracker.workspace_id == workspace_id, DailyTracker.date == today)
@@ -165,6 +166,9 @@ async def update_daily_tracker(tracker_update: DailyTrackerUpdate, db: AsyncSess
     else:
         tracker.metrics = tracker_update.metrics
         flag_modified(tracker, 'metrics')
+        if tracker_update.targets is not None:
+            tracker.targets = tracker_update.targets
+            flag_modified(tracker, 'targets')
         
     await db.commit()
     await db.refresh(tracker)
@@ -172,7 +176,7 @@ async def update_daily_tracker(tracker_update: DailyTrackerUpdate, db: AsyncSess
 
 @router.get("/daily/history", response_model=List[DailyTrackerResponse])
 async def get_daily_history(
-    workspace_id: str, 
+    workspace_id: uuid.UUID, 
     days: int = 7, 
     db: AsyncSession = Depends(get_db)
 ):

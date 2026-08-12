@@ -1,10 +1,6 @@
 import React from 'react';
 import { Header } from './components/Header';
 import { ControlHub } from './components/ControlHub';
-import { Q1ControllableInputs } from './components/quadrants/Q1ControllableInputs';
-import { Q2KnowledgeGym } from './components/quadrants/Q2KnowledgeGym';
-import { Q3HardwareWatchdog } from './components/quadrants/Q3HardwareWatchdog';
-import { Q4CognitiveEnergy } from './components/quadrants/Q4CognitiveEnergy';
 import { FloatingDock } from './components/FloatingDock';
 import { ToastContainer } from './components/ToastContainer';
 import { MicroStartModal } from './components/modals/MicroStartModal';
@@ -18,6 +14,8 @@ import { CareerJobHuntView } from './components/career/CareerJobHuntView';
 import { CourseLabView } from './components/courses/CourseLabView';
 import { MBAStudyDashboard } from './components/mba/MBAStudyDashboard';
 import { useDashboard } from './context/DashboardContext';
+import { WorkspaceDashboard } from './components/dashboard/WorkspaceDashboard';
+import { Omnibar } from './components/omnibar/Omnibar';
 
 export const App: React.FC = () => {
   const { activeView } = useDashboard();
@@ -38,33 +36,8 @@ export const App: React.FC = () => {
         
         {activeView === 'cockpit' && (
           <>
-            {/* Master Control Deck: AGY Dashboard & Laptop Health */}
             <ControlHub />
-
-            {/* 4-Quadrant 2x2 Equal Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-              
-              {/* Quadrant 1: 🎯 Tri-Track Daily Controllable Inputs (@Tsuna) */}
-              <div className="h-full">
-                <Q1ControllableInputs />
-              </div>
-
-              {/* Quadrant 2: 🧠 Dual-Track Knowledge & Drill Gym (@Ren) */}
-              <div className="h-full">
-                <Q2KnowledgeGym />
-              </div>
-
-              {/* Quadrant 3: 🖥️ Hardware & Dev Environment (Thermals / NBFC / Docker) */}
-              <div className="h-full">
-                <Q3HardwareWatchdog />
-              </div>
-
-              {/* Quadrant 4: ⚡ Cognitive Energy & Nervous System (@Sky) */}
-              <div className="h-full">
-                <Q4CognitiveEnergy />
-              </div>
-
-            </div>
+            <WorkspaceDashboard />
           </>
         )}
 
@@ -78,6 +51,9 @@ export const App: React.FC = () => {
 
       {/* Floating Advisor Navigation Dock */}
       <FloatingDock />
+
+      {/* Global Command Palette */}
+      <Omnibar />
 
       {/* Interactive Modals */}
       <AntiProcrastinationRouletteModal />

@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,7 +7,7 @@ from sqlalchemy import select, func, and_
 from sqlalchemy.orm.attributes import flag_modified
 
 from database import get_db
-from models_v2 import Entity
+from models_v2 import Entity, Workspace
 from schemas_v2 import EntityCreate, EntityUpdate, EntityResponse, EntityListResponse
 
 logger = logging.getLogger('command_center.routers.entities')
@@ -15,6 +16,10 @@ router = APIRouter(prefix="/entities", tags=["Entities"])
 
 @router.post("/", response_model=EntityResponse, status_code=status.HTTP_201_CREATED)
 async def create_entity(entity_in: EntityCreate, db: AsyncSession = Depends(get_db)):
+    workspace = await db.get(Workspace, entity_in.workspace_id)
+    if not workspace:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found")
+
     logger.info(f"Creating entity of type {entity_in.entity_type} for workspace {entity_in.workspace_id}")
     entity = Entity(
         workspace_id=entity_in.workspace_id,
@@ -32,20 +37,20 @@ async def create_entity(entity_in: EntityCreate, db: AsyncSession = Depends(get_
 
 @router.get("/", response_model=EntityListResponse)
 async def list_entities(
-    workspace_id: str,
+    workspace_id: uuid.UUID,
     entity_type: Optional[str] = None,
-    status_param: Optional[str] = Query(None, alias="status"),
+    status: Optional[str] = None,
     search: Optional[str] = None,
-    limit: int = 50,
-    offset: int = 0,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db)
 ):
     query = select(Entity).where(Entity.workspace_id == workspace_id)
     
     if entity_type:
         query = query.where(Entity.entity_type == entity_type)
-    if status_param:
-        query = query.where(Entity.status == status_param)
+    if status:
+        query = query.where(Entity.status == status)
     else:
         query = query.where(Entity.status != 'archived')
         
@@ -65,7 +70,10 @@ async def list_entities(
     return EntityListResponse(items=items, total=total)
 
 @router.get("/{entity_id}", response_model=EntityResponse)
-async def get_entity(entity_id: str, db: AsyncSession = Depends(get_db)):
+async def get_entity(
+    entity_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(select(Entity).where(Entity.id == entity_id, Entity.status != 'archived'))
     entity = result.scalar_one_or_none()
     if not entity:
@@ -73,13 +81,17 @@ async def get_entity(entity_id: str, db: AsyncSession = Depends(get_db)):
     return entity
 
 @router.patch("/{entity_id}", response_model=EntityResponse)
-async def update_entity(entity_id: str, entity_update: EntityUpdate, db: AsyncSession = Depends(get_db)):
+async def update_entity(
+    entity_id: uuid.UUID,
+    entity_in: EntityUpdate,
+    db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(select(Entity).where(Entity.id == entity_id, Entity.status != 'archived'))
     entity = result.scalar_one_or_none()
     if not entity:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entity not found")
     
-    update_data = entity_update.model_dump(exclude_unset=True)
+    update_data = entity_in.model_dump(exclude_unset=True)
     
     if 'data' in update_data:
         # Shallow merge
@@ -97,7 +109,10 @@ async def update_entity(entity_id: str, entity_update: EntityUpdate, db: AsyncSe
     return entity
 
 @router.delete("/{entity_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_entity(entity_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_entity(
+    entity_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(select(Entity).where(Entity.id == entity_id))
     entity = result.scalar_one_or_none()
     if not entity:
@@ -109,6 +124,14 @@ async def delete_entity(entity_id: str, db: AsyncSession = Depends(get_db)):
 
 @router.post("/bulk", response_model=dict)
 async def bulk_create_entities(entities_in: List[EntityCreate], db: AsyncSession = Depends(get_db)):
+    if not entities_in:
+        return {"created_count": 0}
+
+    workspace_id = entities_in[0].workspace_id
+    workspace = await db.get(Workspace, workspace_id)
+    if not workspace:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found")
+
     logger.info(f"Bulk creating {len(entities_in)} entities")
     entities = [
         Entity(

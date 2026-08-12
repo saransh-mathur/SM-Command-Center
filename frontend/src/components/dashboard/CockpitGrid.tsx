@@ -1,80 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, Component, ErrorInfo, ReactNode } from 'react';
 import { Responsive, useContainerWidth } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { LayoutDashboard } from 'lucide-react';
-import { useDashboard } from '@/context/DashboardContext';
 import { WIDGET_REGISTRY } from '@/plugins/WidgetRegistry';
 
-export const CockpitGrid: React.FC<{ 
-  logs: any[]; 
-  filteredLogs: any[]; 
-  logFilter: string; 
-  setLogFilter: (f: any) => void;
-  handleTriggerAction: (act: string) => void;
-}> = ({ logs, filteredLogs, logFilter, setLogFilter, handleTriggerAction }) => {
-  const { telemetry, containers, globalConfig } = useDashboard();
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [layouts, setLayouts] = useState<any>(null);
-  const { width, containerRef, mounted } = useContainerWidth();
-  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback: ReactNode;
+}
 
-  // Default Grid Layout
-  const defaultLayout = [
-    // Hardware Metrics (Top Row)
-    { i: 'hw-cpu', x: 0, y: 0, w: 3, h: 3 },
-    { i: 'hw-mem', x: 3, y: 0, w: 3, h: 3 },
-    { i: 'hw-gpu', x: 6, y: 0, w: 3, h: 3 },
-    { i: 'hw-pwr', x: 9, y: 0, w: 3, h: 3 },
-    // Middle Row
-    { i: 'docker', x: 0, y: 3, w: 8, h: 6 },
-    { i: 'actions', x: 8, y: 3, w: 4, h: 6 },
-    // Bottom Row
-    { i: 'data-entry', x: 0, y: 9, w: 6, h: 6 },
-    { i: 'logs', x: 6, y: 9, w: 6, h: 6 },
-  ];
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
 
-  React.useEffect(() => {
-    // Check backend config first
-    if (globalConfig?.dashboard_layout) {
-      setLayouts(globalConfig.dashboard_layout);
-    } else {
-      // Fallback to local storage (migration from old version) or defaults
-      const saved = localStorage.getItem('cockpit_layout');
-      if (saved) {
-        setLayouts(JSON.parse(saved));
-      } else {
-        setLayouts({ lg: defaultLayout });
-      }
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(_: Error): ErrorBoundaryState {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Widget Error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
     }
-  }, [globalConfig]);
+    return this.props.children;
+  }
+}
 
-  const handleLayoutChange = (layout: any, allLayouts: any) => {
-    setLayouts(allLayouts);
-    localStorage.setItem('cockpit_layout', JSON.stringify(allLayouts));
-    
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    
-    // Save to backend config to persist across logouts (debounced)
-    timeoutRef.current = setTimeout(async () => {
-      try {
-        await fetch('http://localhost:8000/api/setup/layout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(allLayouts)
-        });
-      } catch (e) {
-        console.error("Failed to save layout to backend", e);
-      }
-    }, 1000);
-  };
+interface CockpitGridProps {
+  workspaceId: string;
+  layouts: any;
+  onLayoutChange: (layout: any, allLayouts: any) => void;
+}
+
+export const CockpitGrid: React.FC<CockpitGridProps> = ({ 
+  workspaceId, 
+  layouts, 
+  onLayoutChange 
+}) => {
+  const [isEditMode, setIsEditMode] = useState(false);
+  const { width, containerRef, mounted } = useContainerWidth();
 
   if (!mounted) return null;
 
   return (
     <div className="w-full pb-20">
       <div className="flex justify-between items-center mb-4 px-2">
-        <h2 className="text-sm font-semibold text-zinc-300">SYSTEM OVERVIEW</h2>
+        <h2 className="text-sm font-semibold text-zinc-300">WORKSPACE GRID</h2>
         <button 
           onClick={() => setIsEditMode(!isEditMode)}
           className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-md transition-all border ${
@@ -94,7 +72,7 @@ export const CockpitGrid: React.FC<{
           className="layout"
           layouts={layouts}
           width={width}
-          onLayoutChange={handleLayoutChange}
+          onLayoutChange={onLayoutChange}
           breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
           rowHeight={60}
@@ -104,10 +82,18 @@ export const CockpitGrid: React.FC<{
           preventCollision={true}
           margin={[16, 16]}
         >
-          {layouts?.lg?.map((layoutItem: any) => {
-            const widgetId = layoutItem.i;
-            const widget = WIDGET_REGISTRY[widgetId];
-            if (!widget) return null;
+          {(layouts?.lg || (Array.isArray(layouts) ? layouts : Object.values(layouts)[0] || [])).map((layoutItem: any) => {
+            // Widget ID or type could be stored in i, e.g., 'metric-tracker:entities-123'
+            const typeStr = layoutItem.i.split(':')[0];
+            const widget = WIDGET_REGISTRY[typeStr];
+            
+            if (!widget) {
+              return (
+                <div key={layoutItem.i} className="bg-red-500/10 border border-red-500/50 flex items-center justify-center rounded-lg text-red-500 text-xs">
+                  Missing Widget: {typeStr}
+                </div>
+              );
+            }
             
             const WidgetComponent = widget.component;
             const isEditingStyles = isEditMode 
@@ -116,21 +102,19 @@ export const CockpitGrid: React.FC<{
             
             return (
               <div 
-                key={widgetId} 
-                className={`${widget.defaultClassName} ${isEditingStyles} transition-colors`}
+                key={layoutItem.i} 
+                className={`${widget.defaultClassName} ${isEditingStyles} transition-colors overflow-hidden`}
               >
-                <WidgetComponent 
-                  isEditMode={isEditMode}
-                  logs={logs}
-                  filteredLogs={filteredLogs}
-                  logFilter={logFilter}
-                  setLogFilter={setLogFilter}
-                  handleTriggerAction={handleTriggerAction}
-                />
+                <ErrorBoundary fallback={<div className="bg-red-500/10 text-red-500 flex items-center justify-center h-full w-full">Error loading {typeStr}</div>}>
+                  <WidgetComponent 
+                    isEditMode={isEditMode}
+                    workspaceId={workspaceId}
+                    widgetId={layoutItem.i}
+                  />
+                </ErrorBoundary>
               </div>
             );
           })}
-
         </Responsive>
         )}
       </div>
