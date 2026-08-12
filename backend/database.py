@@ -2,6 +2,7 @@ import logging
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
+from sqlalchemy import text as sa_text
 from config import settings
 
 logger = logging.getLogger("command_center.database")
@@ -51,6 +52,13 @@ async def init_db():
     global engine, async_session_factory
     try:
         async with engine.begin() as conn:
+            # Attempt to enable pgvector extension (PostgreSQL only, safe to fail on SQLite)
+            try:
+                await conn.execute(sa_text("CREATE EXTENSION IF NOT EXISTS vector"))
+                logger.info("pgvector extension enabled.")
+            except Exception:
+                logger.info("pgvector extension not available (may be on SQLite fallback).")
+
             await conn.run_sync(Base.metadata.create_all)
         logger.info(f"Database schema initialized successfully using: {engine.url.render_as_string(hide_password=True)}")
     except Exception as e:
@@ -60,3 +68,9 @@ async def init_db():
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         logger.info("Fallback SQLite database initialized successfully at command_center.db")
+
+# Import all models so they register with Base.metadata
+# Legacy models (Phase 1-2)
+import models  # noqa: F401
+# Dynamic models (Phase 3 - Universal Command Center)
+import models_v2  # noqa: F401
