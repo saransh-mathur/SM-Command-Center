@@ -41,6 +41,7 @@ async def get_today_daily_inputs(db: AsyncSession = Depends(get_db)):
     )
 
 @router.put("/daily-inputs", response_model=DailyInputsResponse)
+@router.post("/daily-inputs", response_model=DailyInputsResponse)
 async def update_daily_inputs(payload: DailyInputsUpdate, db: AsyncSession = Depends(get_db)):
     """
     Updates today's controllable inputs record in PostgreSQL.

@@ -189,4 +189,6 @@ python3 launch.py
 ---
 
 ## 📄 License
-MIT License © 2026 Saransh Mathur. All rights reserved.
+This project is open-source and licensed under the **MIT License**. See the [`LICENSE`](LICENSE) file for details.
+
+Copyright © 2026 Saransh Mathur.

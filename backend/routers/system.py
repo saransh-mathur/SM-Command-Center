@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from models import SystemLog
-from schemas import CleanDevResponse, ServiceStatusResponse
+from schemas import CleanDevResponse, ServiceStatusResponse, FanModeRequest
 from services.process_cleaner import execute_clean_dev_purge
+from services.hardware import set_hardware_fan_mode
 from config import settings
 
 router = APIRouter(prefix="/system", tags=["System & Services"])
@@ -13,8 +14,8 @@ router = APIRouter(prefix="/system", tags=["System & Services"])
 @router.post("/clean-dev", response_model=CleanDevResponse)
 async def activate_clean_dev_mode(db: AsyncSession = Depends(get_db)):
     """
-    Executes Clean Dev Mode: terminates zombie Brave tabs & RAM hogs,
-    freed memory is calculated and recorded into PostgreSQL system_logs.
+    Executes Clean Dev Mode: terminates zombie processes & RAM hogs,
+    freed memory is calculated and recorded into system_logs.
     """
     result = execute_clean_dev_purge()
     
@@ -23,7 +24,7 @@ async def activate_clean_dev_mode(db: AsyncSession = Depends(get_db)):
         action="CLEAN_DEV_MODE",
         freed_ram_mb=result["freed_ram_mb"],
         terminated_pids=result["terminated_pids"],
-        timestamp=datetime.datetime.utcnow()
+        timestamp=datetime.datetime.now(datetime.timezone.utc)
     )
     db.add(log_entry)
     await db.commit()
@@ -35,6 +36,12 @@ async def activate_clean_dev_mode(db: AsyncSession = Depends(get_db)):
         message=result["message"],
         timestamp=datetime.datetime.now().strftime("%I:%M:%S %p")
     )
+
+@router.post("/fan-mode")
+async def update_system_fan_mode(payload: FanModeRequest):
+    """Sets NBFC fan profile (Auto, Performance, Quiet) via system router."""
+    mode = set_hardware_fan_mode(payload.mode)
+    return {"status": "success", "mode": mode, "fan_mode": mode, "message": f"Fan mode updated to {mode}."}
 
 @router.get("/agy-status", response_model=ServiceStatusResponse)
 async def get_agy_dashboard_status():
@@ -89,7 +96,7 @@ async def toggle_agy_dashboard(background_tasks: BackgroundTasks, db: AsyncSessi
         action=f"TOGGLE_AGY_{target_action.upper()}",
         freed_ram_mb=0.0,
         terminated_pids=[],
-        timestamp=datetime.datetime.utcnow()
+        timestamp=datetime.datetime.now(datetime.timezone.utc)
     )
     db.add(log_entry)
     await db.commit()
@@ -115,7 +122,7 @@ async def trigger_laptop_health_scan(background_tasks: BackgroundTasks, db: Asyn
         action="REFRESH_LAPTOP_HEALTH",
         freed_ram_mb=0.0,
         terminated_pids=[],
-        timestamp=datetime.datetime.utcnow()
+        timestamp=datetime.datetime.now(datetime.timezone.utc)
     )
     db.add(log_entry)
     await db.commit()
