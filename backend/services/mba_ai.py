@@ -1,9 +1,22 @@
 import os
 import re
 import httpx
+import json
+from pathlib import Path
 from typing import Dict, Any, List, Optional
+from schemas import SetupConfigModel
 from services.mba_indexer import mba_indexer, MODULE_MAPPINGS
 from services.mba_notes_library import get_full_12_unit_notes
+
+def get_system_config() -> SetupConfigModel:
+    config_path = Path(os.getenv("COMMAND_CENTER_CONFIG_PATH", "command_center.config.json"))
+    if not config_path.exists():
+        return SetupConfigModel()
+    try:
+        with open(config_path, "r") as f:
+            return SetupConfigModel(**json.load(f))
+    except Exception:
+        return SetupConfigModel()
 
 # ==============================================================================
 # 🎓 DUAL-MODE COMPREHENSIVE MBA SEM 1 CURRICULUM NOTES
@@ -375,25 +388,28 @@ async def generate_mba_answer(query: str, module_id: Optional[str] = None) -> Di
     meta = MODULE_MAPPINGS.get(mod_id, MODULE_MAPPINGS["financial_accounting"])
     mod_title = meta["title"]
 
-    gemini_key = os.getenv("GEMINI_API_KEY", "")
+    config = get_system_config()
+    provider = config.llm_provider
+    api_key = config.llm_api_key
+    model_name = config.llm_model
 
-    if gemini_key:
-        try:
-            prompt_context = mba_indexer.get_module_text_snippet(mod_id, max_pages=8)
-            system_prompt = (
-                f"You are @Ren, Chief Learning Officer and MBA Concept Mentor for Saransh Mathur.\n"
-                f"Subject: {mod_title} ({meta['code']}). Ground your answer in NMIMS textbook curriculum.\n"
-                "Structure your answer as:\n"
-                "1. Direct Executive Summary (2 sentences)\n"
-                "2. Core Conceptual Breakdown & LaTeX Mathematical Formulas (use $$ for block and $ for inline)\n"
-                "3. Tech / System Architecture Analogy (map MBA concept to software engineering)\n"
-                "4. Source Citations (Reference NMIMS Textbook & Slide Deck)\n"
-                "5. 2 Active Recall Self-Testing Questions."
-            )
+    prompt_context = mba_indexer.get_module_text_snippet(mod_id, max_pages=8)
+    system_prompt = (
+        f"You are @Ren, Chief Learning Officer and MBA Concept Mentor for Saransh Mathur.\n"
+        f"Subject: {mod_title} ({meta['code']}). Ground your answer in NMIMS textbook curriculum.\n"
+        "Structure your answer as:\n"
+        "1. Direct Executive Summary (2 sentences)\n"
+        "2. Core Conceptual Breakdown & LaTeX Mathematical Formulas (use $$ for block and $ for inline)\n"
+        "3. Tech / System Architecture Analogy (map MBA concept to software engineering)\n"
+        "4. Source Citations (Reference NMIMS Textbook & Slide Deck)\n"
+        "5. 2 Active Recall Self-Testing Questions."
+    )
 
+    try:
+        if provider == "gemini" and api_key:
             async with httpx.AsyncClient(timeout=20.0) as client:
                 res = await client.post(
-                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}",
+                    f"https://generativelanguage.googleapis.com/v1beta/models/{model_name or 'gemini-1.5-flash'}:generateContent?key={api_key}",
                     json={
                         "contents": [
                             {"role": "user", "parts": [{"text": f"{system_prompt}\n\nContext Snippets:\n{prompt_context}\n\nQuestion: {query}"}]}
@@ -407,10 +423,86 @@ async def generate_mba_answer(query: str, module_id: Optional[str] = None) -> Di
                         "module_id": mod_id,
                         "module_title": mod_title,
                         "answer": answer_text,
-                        "engine": "Gemini 1.5 Flash (Direct API)"
+                        "engine": f"Gemini ({model_name})"
                     }
-        except Exception:
-            pass
+        
+        elif provider == "openai" and api_key:
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                res = await client.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {api_key}"},
+                    json={
+                        "model": model_name or "gpt-4o",
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": f"Context Snippets:\n{prompt_context}\n\nQuestion: {query}"}
+                        ]
+                    }
+                )
+                if res.status_code == 200:
+                    resp_json = res.json()
+                    answer_text = resp_json['choices'][0]['message']['content']
+                    return {
+                        "module_id": mod_id,
+                        "module_title": mod_title,
+                        "answer": answer_text,
+                        "engine": f"OpenAI ({model_name})"
+                    }
+                    
+        elif provider == "anthropic" and api_key:
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                res = await client.post(
+                    "https://api.anthropic.com/v1/messages",
+                    headers={
+                        "x-api-key": api_key, 
+                        "anthropic-version": "2023-06-01",
+                        "content-type": "application/json"
+                    },
+                    json={
+                        "model": model_name or "claude-3-5-sonnet-20240620",
+                        "max_tokens": 1024,
+                        "system": system_prompt,
+                        "messages": [
+                            {"role": "user", "content": f"Context Snippets:\n{prompt_context}\n\nQuestion: {query}"}
+                        ]
+                    }
+                )
+                if res.status_code == 200:
+                    resp_json = res.json()
+                    answer_text = resp_json['content'][0]['text']
+                    return {
+                        "module_id": mod_id,
+                        "module_title": mod_title,
+                        "answer": answer_text,
+                        "engine": f"Anthropic ({model_name})"
+                    }
+                    
+        elif provider == "ollama":
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                res = await client.post(
+                    "http://localhost:11434/api/chat",
+                    json={
+                        "model": model_name or "llama3",
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": f"Context Snippets:\n{prompt_context}\n\nQuestion: {query}"}
+                        ],
+                        "stream": False
+                    }
+                )
+                if res.status_code == 200:
+                    resp_json = res.json()
+                    answer_text = resp_json['message']['content']
+                    return {
+                        "module_id": mod_id,
+                        "module_title": mod_title,
+                        "answer": answer_text,
+                        "engine": f"Local Ollama ({model_name})"
+                    }
+                    
+    except Exception as e:
+        print(f"Universal Router LLM Error: {e}")
+        pass
 
     q_lower = query.lower()
     if "accounting" in q_lower or "balance sheet" in q_lower or "debit" in q_lower or "asset" in q_lower:

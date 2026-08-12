@@ -3,11 +3,13 @@ from typing import Optional
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, desc
 from database import get_db
 from services.mba_indexer import mba_indexer
 from services.mba_ai import generate_mba_answer, get_premade_notes
 from services.mba_rag import mba_rag
+from models import DailyInput, MBASessionLog
+from schemas import MBASessionLogCreate, MBASessionLogResponse
 
 router = APIRouter(prefix="/mba", tags=["MBA Study Copilot"])
 
@@ -45,22 +47,23 @@ async def search_textbook_passages(payload: ChatRequest):
     passages = await mba_rag.search_relevant_passages(payload.query, payload.module_id, top_k=4)
     return {"module_id": payload.module_id, "query": payload.query, "passages": passages}
 
-@router.post("/log-study")
-async def log_mba_study_session(payload: StudyLogRequest, db: AsyncSession = Depends(get_db)):
+@router.post("/sessions", response_model=MBASessionLogResponse)
+async def log_mba_session(payload: MBASessionLogCreate, db: AsyncSession = Depends(get_db)):
     """
-    Logs an MBA study sprint into PostgreSQL drill_logs and increments
-    today's daily controllable input tracker.
+    Logs a deep MBA study session into PostgreSQL mba_session_logs and increments
+    today's daily controllable input tracker for mbaRecall.
     """
-    # 1. Add to drill_logs
-    log = DrillLog(
-        category="MBA_STUDY",
-        topic=f"{payload.module_id.replace('_', ' ').title()}: {payload.topic}",
-        notes=f"Completed {payload.minutes}-minute focused study sprint with MBA Copilot.",
+    # 1. Add to mba_session_logs
+    log = MBASessionLog(
+        subject=payload.subject,
+        topic=payload.topic,
+        duration_minutes=payload.duration_minutes,
+        ai_notes_snapshot=payload.ai_notes_snapshot,
         created_at=datetime.datetime.utcnow()
     )
     db.add(log)
 
-    # 2. Update today's daily_inputs
+    # 2. Update today's daily_inputs (optional if handled by frontend, but good to have)
     today = datetime.date.today()
     stmt = select(DailyInput).where(DailyInput.date == today)
     res = await db.execute(stmt)
@@ -73,9 +76,32 @@ async def log_mba_study_session(payload: StudyLogRequest, db: AsyncSession = Dep
         record.updated_at = datetime.datetime.utcnow()
 
     await db.commit()
+    await db.refresh(log)
 
-    return {
-        "status": "success",
-        "message": f"Logged {payload.minutes}m study sprint for {payload.topic} in PostgreSQL.",
-        "daily_dev_blocks": record.deep_dev_blocks
-    }
+    return MBASessionLogResponse(
+        id=log.id,
+        subject=log.subject,
+        topic=log.topic,
+        duration_minutes=log.duration_minutes,
+        ai_notes_snapshot=log.ai_notes_snapshot,
+        created_at=log.created_at.isoformat()
+    )
+
+@router.get("/sessions", response_model=list[MBASessionLogResponse])
+async def list_mba_sessions(limit: int = 20, db: AsyncSession = Depends(get_db)):
+    """Retrieves recent MBA study sessions from PostgreSQL."""
+    stmt = select(MBASessionLog).order_by(desc(MBASessionLog.created_at)).limit(limit)
+    result = await db.execute(stmt)
+    records = result.scalars().all()
+    
+    return [
+        MBASessionLogResponse(
+            id=r.id,
+            subject=r.subject,
+            topic=r.topic,
+            duration_minutes=r.duration_minutes,
+            ai_notes_snapshot=r.ai_notes_snapshot,
+            created_at=r.created_at.isoformat()
+        )
+        for r in records
+    ]

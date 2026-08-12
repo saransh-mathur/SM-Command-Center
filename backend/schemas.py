@@ -65,6 +65,48 @@ class DrillLogResponse(BaseModel):
         from_attributes = True
 
 # ==========================================
+# Course Logs Schemas
+# ==========================================
+class CourseLogCreate(BaseModel):
+    course_id: str
+    course_name: str
+    sections_completed: int = Field(default=1, ge=1)
+    minutes_spent: int = Field(default=0, ge=0)
+    notes: Optional[str] = None
+
+class CourseLogResponse(BaseModel):
+    id: int
+    course_id: str
+    course_name: str
+    sections_completed: int
+    minutes_spent: int
+    notes: Optional[str]
+    created_at: str
+
+    class Config:
+        from_attributes = True
+
+# ==========================================
+# MBA Session Logs Schemas
+# ==========================================
+class MBASessionLogCreate(BaseModel):
+    subject: str
+    topic: str
+    duration_minutes: int = Field(default=0, ge=0)
+    ai_notes_snapshot: Optional[str] = None
+
+class MBASessionLogResponse(BaseModel):
+    id: int
+    subject: str
+    topic: str
+    duration_minutes: int
+    ai_notes_snapshot: Optional[str]
+    created_at: str
+
+    class Config:
+        from_attributes = True
+
+# ==========================================
 # System & Service Management Schemas
 # ==========================================
 class CleanDevResponse(BaseModel):
@@ -99,3 +141,21 @@ class ContainerListResponse(BaseModel):
     total: int
     running: int
     containers: List[ContainerInfo]
+
+# ==========================================
+# Global Setup & Configuration Schemas
+# ==========================================
+class SetupConfigModel(BaseModel):
+    setup_completed: bool = False
+    dashboard_name: str = "Command Center"
+    accent_color: str = "emerald"
+    active_modules: List[str] = ["cockpit", "mba", "courses", "career"]
+    llm_provider: str = "ollama"  # ollama, openai, anthropic, gemini, groq
+    llm_api_key: Optional[str] = None
+    llm_model: str = "llama3"
+    admin_password_hash: Optional[str] = None
+    dashboard_layout: Optional[dict] = None
+
+class SetupStatusResponse(BaseModel):
+    is_setup: bool
+    config: Optional[SetupConfigModel] = None

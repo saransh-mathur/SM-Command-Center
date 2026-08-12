@@ -4,10 +4,55 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from database import get_db
-from models import DailyInput, DrillLog, SystemLog
-from schemas import DailyInputsResponse, DailyInputsUpdate, DrillLogCreate, DrillLogResponse
+from models import DailyInput, DrillLog, SystemLog, CourseProgressLog
+from schemas import DailyInputsResponse, DailyInputsUpdate, DrillLogCreate, DrillLogResponse, CourseLogCreate, CourseLogResponse
 
 router = APIRouter(prefix="/state", tags=["State & PostgreSQL Persistence"])
+
+@router.post("/course-logs", response_model=CourseLogResponse)
+async def create_course_log(payload: CourseLogCreate, db: AsyncSession = Depends(get_db)):
+    """Logs course progress into PostgreSQL."""
+    log = CourseProgressLog(
+        course_id=payload.course_id,
+        course_name=payload.course_name,
+        sections_completed=payload.sections_completed,
+        minutes_spent=payload.minutes_spent,
+        notes=payload.notes,
+        created_at=datetime.datetime.utcnow()
+    )
+    db.add(log)
+    await db.commit()
+    await db.refresh(log)
+
+    return CourseLogResponse(
+        id=log.id,
+        course_id=log.course_id,
+        course_name=log.course_name,
+        sections_completed=log.sections_completed,
+        minutes_spent=log.minutes_spent,
+        notes=log.notes,
+        created_at=log.created_at.isoformat()
+    )
+
+@router.get("/course-logs", response_model=List[CourseLogResponse])
+async def list_course_logs(limit: int = 10, db: AsyncSession = Depends(get_db)):
+    """Retrieves recent course progress records from PostgreSQL."""
+    stmt = select(CourseProgressLog).order_by(desc(CourseProgressLog.created_at)).limit(limit)
+    result = await db.execute(stmt)
+    records = result.scalars().all()
+
+    return [
+        CourseLogResponse(
+            id=r.id,
+            course_id=r.course_id,
+            course_name=r.course_name,
+            sections_completed=r.sections_completed,
+            minutes_spent=r.minutes_spent,
+            notes=r.notes,
+            created_at=r.created_at.isoformat()
+        )
+        for r in records
+    ]
 
 @router.get("/daily-inputs", response_model=DailyInputsResponse)
 async def get_today_daily_inputs(db: AsyncSession = Depends(get_db)):

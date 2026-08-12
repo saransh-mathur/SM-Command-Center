@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from database import init_db
-from routers import telemetry, system, containers, state, mba
+from routers import telemetry, system, containers, state, mba, app_state, setup_config, auth
 
 # Configure Logging
 logging.basicConfig(
@@ -18,6 +18,10 @@ async def lifespan(app: FastAPI):
     # Startup: Initialize Database & Schema
     logger.info("Initializing SM Command Center Backend...")
     await init_db()
+    
+    # Security: Ensure Admin Password
+    auth.ensure_admin_account_exists()
+    
     logger.info("SM Command Center Backend online and ready.")
     yield
     # Shutdown
@@ -46,6 +50,9 @@ app.include_router(system.router, prefix=settings.API_PREFIX)
 app.include_router(containers.router, prefix=settings.API_PREFIX)
 app.include_router(state.router, prefix=settings.API_PREFIX)
 app.include_router(mba.router, prefix=settings.API_PREFIX)
+app.include_router(app_state.router, prefix=settings.API_PREFIX)
+app.include_router(setup_config.router, prefix=settings.API_PREFIX)
+app.include_router(auth.router, prefix=settings.API_PREFIX)
 
 @app.get("/")
 async def root():

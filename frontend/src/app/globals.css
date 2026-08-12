@@ -1,0 +1,193 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-zinc-950: #09090b;
+  --color-zinc-900: #121215;
+  --color-zinc-800: #27272a;
+  --color-zinc-500: #71717a;
+  --color-zinc-100: #f4f4f5;
+  
+  --color-emerald-500: #10b981;
+  --color-blue-500: #3b82f6;
+  --color-amber-500: #f59e0b;
+  --color-rose-500: #ef4444;
+}
+
+body {
+  background-color: var(--color-zinc-950);
+  color: var(--color-zinc-100);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
+}
+
+option {
+  background-color: var(--color-zinc-950);
+  color: var(--color-zinc-100);
+}
+
+/* Custom Scrollbar for Logs */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-zinc-800);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-zinc-500);
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* TRUE BLACK & WHITE MINIMALIST - LIGHT MODE */
+    --color-slate-950: 255, 255, 255; /* Base white */
+    --color-slate-900: 250, 250, 250; /* Extremely subtle off-white */
+    --color-slate-800: 229, 229, 229; /* Dividers */
+    --color-slate-700: 204, 204, 204;
+    --color-slate-600: 163, 163, 163;
+    --color-slate-500: 115, 115, 115; /* Muted text */
+    --color-slate-400: 82, 82, 82;    /* Secondary text */
+    --color-slate-300: 38, 38, 38;    /* Primary text */
+    --color-slate-200: 23, 23, 23;
+    --color-slate-100: 10, 10, 10;    /* Headings */
+    --color-slate-50: 0, 0, 0;        /* Pure black */
+
+    --color-void-950: 255, 255, 255;
+    --color-void-900: 255, 255, 255;  /* Main Background - Pure White */
+    --color-void-850: 250, 250, 250;
+    --color-void-800: 229, 229, 229;
+    --color-void-700: 204, 204, 204;
+
+    --color-white: 0, 0, 0;
+    --color-black: 255, 255, 255;
+
+    --color-shadow: 0, 0, 0;
+    --color-glass-border: 0, 0, 0;
+    
+    --opacity-shadow-glass: 0.03;
+    --opacity-shadow-dock: 0.06;
+    --opacity-glow: 0.0;             /* NO glowing colors */
+    --opacity-grid: 0.02;
+
+    /* Minimalist Monochromatic Accents */
+    --color-accent-1: 115, 115, 115; /* Medium Gray */
+    --color-accent-2: 10, 10, 10;    /* Almost Black (Primary Actions) */
+    --color-accent-3: 163, 163, 163; /* Light Gray */
+  }
+
+  .dark {
+    /* TRUE BLACK & WHITE MINIMALIST - DARK MODE */
+    --color-slate-50: 250, 250, 250;
+    --color-slate-100: 229, 229, 229;
+    --color-slate-200: 204, 204, 204;
+    --color-slate-300: 163, 163, 163;
+    --color-slate-400: 115, 115, 115;
+    --color-slate-500: 82, 82, 82;
+    --color-slate-600: 38, 38, 38;
+    --color-slate-700: 23, 23, 23;
+    --color-slate-800: 15, 15, 15;
+    --color-slate-900: 8, 8, 8;
+    --color-slate-950: 0, 0, 0;
+
+    --color-void-950: 10, 10, 10;
+    --color-void-900: 0, 0, 0;       /* Main Background - Pure Black */
+    --color-void-850: 8, 8, 8;
+    --color-void-800: 15, 15, 15;
+    --color-void-700: 23, 23, 23;
+
+    --color-white: 255, 255, 255;
+    --color-black: 0, 0, 0;
+
+    --color-shadow: 0, 0, 0;
+    --color-glass-border: 255, 255, 255;
+    
+    --opacity-shadow-glass: 0.2;
+    --opacity-shadow-dock: 0.3;
+    --opacity-glow: 0.0;
+    --opacity-grid: 0.03;
+
+    /* Minimalist Monochromatic Accents */
+    --color-accent-1: 163, 163, 163; /* Medium Gray */
+    --color-accent-2: 250, 250, 250; /* Almost White (Primary Actions) */
+    --color-accent-3: 115, 115, 115; /* Dark Gray */
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.4);
+  }
+}
+
+/* Minimalist Subdued Utilities */
+.glass-panel {
+  background: rgba(var(--color-slate-900), 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px 0 rgba(var(--color-shadow), var(--opacity-shadow-glass));
+}
+
+.glass-panel-subtle {
+  background: rgba(var(--color-slate-900), 0.3);
+  backdrop-filter: blur(8px);
+}
+
+.glass-panel-glow-cyan,
+.glass-panel-glow-emerald,
+.glass-panel-glow-violet,
+.glass-panel-glow-amber {
+  border-color: rgba(var(--color-glass-border), 0.08);
+  box-shadow: 0 0 0 0 transparent; /* No glows */
+}
+
+/* 3D Flip Card Styles */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Grid scanning effect */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(var(--color-glass-border), var(--opacity-grid)) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(var(--color-glass-border), var(--opacity-grid)) 1px, transparent 1px);
+}

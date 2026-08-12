@@ -62,3 +62,64 @@ class SystemLog(Base):
             "terminated_pids": self.terminated_pids,
             "timestamp": self.timestamp.isoformat() if self.timestamp else None
         }
+
+class AppState(Base):
+    __tablename__ = "app_state"
+
+    key = Column(String(128), primary_key=True, index=True)
+    value = Column(JSON, nullable=False)
+    updated_at = Column(
+        DateTime, 
+        default=datetime.datetime.utcnow, 
+        onupdate=datetime.datetime.utcnow, 
+        nullable=False
+    )
+
+    def to_dict(self):
+        return {
+            "key": self.key,
+            "value": self.value,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
+
+class CourseProgressLog(Base):
+    __tablename__ = "course_progress_logs"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    course_id = Column(String(128), index=True, nullable=False)
+    course_name = Column(String(255), nullable=False)
+    sections_completed = Column(Integer, default=1, nullable=False)
+    minutes_spent = Column(Integer, default=0, nullable=False)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "course_id": self.course_id,
+            "course_name": self.course_name,
+            "sections_completed": self.sections_completed,
+            "minutes_spent": self.minutes_spent,
+            "notes": self.notes,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+class MBASessionLog(Base):
+    __tablename__ = "mba_session_logs"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    subject = Column(String(128), index=True, nullable=False)
+    topic = Column(String(255), nullable=False)
+    duration_minutes = Column(Integer, default=0, nullable=False)
+    ai_notes_snapshot = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "subject": self.subject,
+            "topic": self.topic,
+            "duration_minutes": self.duration_minutes,
+            "ai_notes_snapshot": self.ai_notes_snapshot,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }

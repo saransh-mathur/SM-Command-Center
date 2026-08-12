@@ -40,3 +40,6 @@ venv.bak/
 # Environment variables
 .env
 .env.local
+
+# Local Configuration
+command_center.config.json
