@@ -1,6 +1,7 @@
 import subprocess
 import datetime
 from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi.responses import FileResponse, HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from models import SystemLog
@@ -76,38 +77,17 @@ async def get_agy_dashboard_status():
             message=f"Live simulated status: ACTIVE ({e})"
         )
 
-@router.post("/toggle-agy", response_model=ServiceStatusResponse)
-async def toggle_agy_dashboard(background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
-    """Toggles AGY Streamlit service (Port 8501) and telemetry sync cron."""
-    current = await get_agy_dashboard_status()
-    target_action = "disable" if current.status == "active" else "enable"
+@router.post("/toggle-agy")
+async def toggle_agy_dashboard():
+    """Toggles AGY Streamlit service."""
+    subprocess.run(["python3", "/home/saransh/toggle_agy_dashboard.py"])
+    return {"status": "success", "message": "AGY dashboard toggled"}
 
-    try:
-        cmd = f"python3 {settings.TOGGLE_AGY_SCRIPT} {target_action}"
-        background_tasks.add_task(subprocess.run, cmd, shell=True)
-    except Exception:
-        pass
-
-    new_status = "disabled" if target_action == "disable" else "active"
-    new_cron = target_action == "enable"
-
-    # Log in system_logs
-    log_entry = SystemLog(
-        action=f"TOGGLE_AGY_{target_action.upper()}",
-        freed_ram_mb=0.0,
-        terminated_pids=[],
-        timestamp=datetime.datetime.now(datetime.timezone.utc)
-    )
-    db.add(log_entry)
-    await db.commit()
-
-    return ServiceStatusResponse(
-        service="agy_dashboard",
-        status=new_status,
-        port=8501,
-        cron_active=new_cron,
-        message=f"AGY Dashboard & Telemetry cron are now {new_status.upper()}."
-    )
+@router.get("/laptop-dashboard")
+async def get_laptop_dashboard():
+    """Refreshes and serves the laptop dashboard HTML."""
+    subprocess.run(["python3", "/home/saransh/update_dashboard.py"])
+    return FileResponse("/home/saransh/laptop_health_dashboard.html")
 
 @router.post("/refresh-laptop-health")
 async def trigger_laptop_health_scan(background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
