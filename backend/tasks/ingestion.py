@@ -162,3 +162,63 @@ def process_bulk_file(self, log_id: str, workspace_id: str, file_path: str, sour
     except Exception as exc:
         logger.error(f"Transient task error, retrying: {exc}")
         raise self.retry(exc=exc, countdown=10)
+
+import PyPDF2
+from services.rag_engine import chunk_text, embed_text
+
+async def _process_document_async(file_path: str, filename: str, workspace_id: str):
+    logger.info(f"Processing document {filename}")
+    text = ""
+    if filename.lower().endswith('.pdf'):
+        with open(file_path, "rb") as f:
+            reader = PyPDF2.PdfReader(f)
+            text = "\n".join(page.extract_text() for page in reader.pages if page.extract_text())
+    elif filename.lower().endswith('.csv'):
+        with open(file_path, "r", encoding="utf-8") as f:
+            text = f.read()
+    elif filename.lower().endswith('.md') or filename.lower().endswith('.txt'):
+        with open(file_path, "r", encoding="utf-8") as f:
+            text = f.read()
+    else:
+        logger.warning(f"Unsupported file type for {filename}")
+        return
+
+    if not text:
+        logger.warning(f"No text extracted from {filename}")
+        return
+
+    chunks = chunk_text(text)
+    
+    async with database.async_session_factory() as session:
+        ws_uuid = uuid.UUID(workspace_id)
+        
+        for i, chunk in enumerate(chunks):
+            embedding = await embed_text(chunk)
+            entity = Entity(
+                workspace_id=ws_uuid,
+                entity_type="document_chunk",
+                title=f"{filename} - Chunk {i+1}",
+                data={"content": chunk, "_embedding": embedding},
+                source="document_upload"
+            )
+            session.add(entity)
+        
+        await session.commit()
+    
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    logger.info(f"Finished processing document {filename}")
+
+@celery_app.task(name="tasks.ingestion.process_document")
+def process_document(file_path: str, filename: str, workspace_id: str):
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_closed():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        loop.run_until_complete(_process_document_async(file_path, filename, workspace_id))
+        return {"status": "success"}
+    except Exception as exc:
+        logger.error(f"Error in process_document: {exc}")
+        return {"status": "failed", "reason": str(exc)}

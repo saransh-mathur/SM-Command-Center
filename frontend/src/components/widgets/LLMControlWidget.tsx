@@ -27,7 +27,7 @@ export const LLMControlWidget = ({ workspaceId, widgetId, isEditMode }: any) => 
   const fetchModels = async () => {
     setOllamaStatus('loading');
     try {
-      const resp = await fetch('/api/ai/models');
+      const resp = await fetch('http://localhost:8000/api/ai/models');
       if (!resp.ok) {
         setOllamaStatus('offline');
         return;

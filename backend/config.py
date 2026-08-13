@@ -64,6 +64,10 @@ class Settings(BaseSettings):
     RAG_CHUNK_OVERLAP: int = int(os.getenv("RAG_CHUNK_OVERLAP", "64"))
     RAG_TOP_K: int = int(os.getenv("RAG_TOP_K", "5"))
 
+    # Phase 5: External APIs
+    YOUTUBE_API_KEY: str = os.getenv("YOUTUBE_API_KEY", "")
+    STRIPE_API_KEY: str = os.getenv("STRIPE_API_KEY", "")
+
     class Config:
         env_file = ".env"
         extra = "allow"

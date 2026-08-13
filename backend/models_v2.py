@@ -44,8 +44,9 @@ class Entity(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
-    # pgvector embedding column
-    embedding = Column(Vector(1536))
+    from sqlalchemy.orm import deferred
+    # pgvector embedding column (deferred to avoid SQLite errors)
+    embedding = deferred(Column(Vector(1536)))
 
     __table_args__ = (
         Index('ix_entities_workspace_type', 'workspace_id', 'entity_type'),

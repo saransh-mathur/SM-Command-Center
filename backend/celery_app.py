@@ -5,12 +5,21 @@ from celery import Celery
 os.environ.setdefault("FORCELOAD", "1")
 from config import settings
 
+from celery.schedules import crontab
+
 celery_app = Celery(
     "command_center",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-    include=["tasks.ingestion"]
+    include=["tasks.ingestion", "tasks.polling"]
 )
+
+celery_app.conf.beat_schedule = {
+    "poll-live-metrics-every-1-min": {
+        "task": "tasks.polling.poll_live_metrics",
+        "schedule": crontab(minute="*/1"),
+    },
+}
 
 celery_app.conf.update(
     task_serializer="json",

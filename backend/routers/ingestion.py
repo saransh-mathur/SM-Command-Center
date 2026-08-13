@@ -25,20 +25,19 @@ router = APIRouter(prefix="/ingestion", tags=["Ingestion & Webhooks"])
 TEMP_UPLOAD_DIR = "/tmp/command_center_ingestion"
 os.makedirs(TEMP_UPLOAD_DIR, exist_ok=True)
 
-@router.post("/upload", response_model=IngestionLogResponse, status_code=status.HTTP_202_ACCEPTED)
-async def upload_bulk_file(
-    workspace_id: uuid.UUID = Form(...),
-    entity_type: str = Form(...),
-    source_type: str = Form(...), # 'csv_upload', 'json_upload', 'pdf_upload'
+@router.post("/upload", status_code=status.HTTP_202_ACCEPTED)
+async def upload_document(
+    workspace_id: str = Form(...),
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Endpoint for uploading heavy payloads (CSV, JSON, PDF).
-    Offloads processing to Celery workers to avoid blocking the main thread.
+    Endpoint for uploading documents (PDF, CSV, Markdown).
+    Offloads chunking and embedding to Celery workers.
     """
     # 1. Verify workspace exists
-    workspace = await db.get(Workspace, workspace_id)
+    workspace_uuid = uuid.UUID(workspace_id)
+    workspace = await db.get(Workspace, workspace_uuid)
     if not workspace:
         raise HTTPException(status_code=404, detail="Workspace not found")
 
@@ -57,31 +56,18 @@ async def upload_bulk_file(
         logger.error(f"Failed to save uploaded file: {e}")
         raise HTTPException(status_code=500, detail="Failed to save file for processing")
 
-    # 3. Create IngestionLog entry
-    log_entry = IngestionLog(
-        workspace_id=workspace_id,
-        source_type=source_type,
-        source_name=file.filename or "unknown_upload",
-        status="pending"
-    )
-    db.add(log_entry)
-    await db.commit()
-    await db.refresh(log_entry)
-
-    # 4. Dispatch Celery Task
-    logger.info(f"Dispatching Celery task for log_id={log_entry.id}")
+    # 3. Dispatch Celery Task
+    logger.info(f"Dispatching process_document task for {file.filename}")
     celery_app.send_task(
-        "tasks.ingestion.process_bulk_file",
+        "tasks.ingestion.process_document",
         args=[
-            str(log_entry.id), 
-            str(workspace_id), 
-            temp_filepath, 
-            source_type, 
-            entity_type
+            temp_filepath,
+            file.filename,
+            str(workspace_id)
         ]
     )
 
-    return log_entry
+    return {"message": "Document accepted for processing"}
 
 
 @router.post("/webhook/{workspace_id}/{entity_type}", status_code=status.HTTP_202_ACCEPTED)

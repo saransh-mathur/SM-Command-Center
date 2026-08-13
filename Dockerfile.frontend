@@ -1,0 +1,27 @@
+FROM node:18-alpine AS build
+
+WORKDIR /app
+
+# Copy package config
+COPY frontend/package.json frontend/package-lock.json* ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY frontend/ .
+
+# Build the Vite/React application
+RUN npm run build
+
+# Use Nginx to serve static files
+FROM nginx:alpine
+
+# Copy built assets
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Run nginx in foreground
+CMD ["nginx", "-g", "daemon off;"]

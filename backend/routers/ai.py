@@ -12,6 +12,7 @@ from config import settings
 from database import get_db
 from services.llm_factory import get_llm_provider
 from services.rag_engine import semantic_search, build_rag_context, embed_and_store_entity
+from services.ai_tools import OLLAMA_TOOLS, TOOL_FUNCTIONS
 
 logger = logging.getLogger("command_center.routers.ai")
 
@@ -114,28 +115,82 @@ async def chat_stream(
         except (ValueError, Exception) as e:
             logger.warning(f"RAG retrieval failed, proceeding without context: {e}")
     
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": req.message}
+    ]
+
     async def event_stream():
         in_think_block = False
         try:
-            async for token in provider.generate_stream(
+            # First pass: Check for tool calls
+            chat_resp = await provider.chat(
                 model=model,
-                prompt=req.message,
-                system=system_prompt,
+                messages=messages,
+                tools=OLLAMA_TOOLS,
                 temperature=req.temperature
-            ):
-                # Filter out <think>...</think> blocks from qwen3
-                if "<think>" in token:
-                    in_think_block = True
-                    continue
-                if "</think>" in token:
-                    in_think_block = False
-                    continue
-                if in_think_block:
-                    continue
-                # SSE format
-                data = json.dumps({"token": token})
-                yield f"data: {data}\n\n"
-            yield f"data: {json.dumps({'done': True})}\n\n"
+            )
+            
+            resp_msg = chat_resp.get("message", {})
+            tool_calls = resp_msg.get("tool_calls", [])
+            
+            if tool_calls:
+                messages.append(resp_msg)
+                
+                for tc in tool_calls:
+                    func_name = tc.get("function", {}).get("name")
+                    args = tc.get("function", {}).get("arguments", {})
+                    
+                    yield f"data: {json.dumps({'tool_call': {'name': func_name}})}\n\n"
+                    
+                    if func_name in TOOL_FUNCTIONS:
+                        try:
+                            # Pass workspace_id and db
+                            result_str = await TOOL_FUNCTIONS[func_name](**args, workspace_id=req.workspace_id, db=db)
+                        except Exception as e:
+                            logger.error(f"Tool execution failed: {e}")
+                            result_str = f"Error executing {func_name}: {str(e)}"
+                    else:
+                        result_str = f"Error: Tool {func_name} not found."
+                        
+                    messages.append({
+                        "role": "tool",
+                        "content": result_str,
+                        "name": func_name
+                    })
+                    
+                # Second pass: stream final response
+                async for chunk in provider.generate_stream(
+                    model=model,
+                    messages=messages,
+                    temperature=req.temperature
+                ):
+                    if "error" in chunk:
+                        yield f"data: {json.dumps({'error': chunk['error']})}\n\n"
+                        continue
+                    
+                    token = chunk.get("message", {}).get("content", "")
+                    if token:
+                        if "<think>" in token:
+                            in_think_block = True
+                            continue
+                        if "</think>" in token:
+                            in_think_block = False
+                            continue
+                        if in_think_block:
+                            continue
+                        
+                        yield f"data: {json.dumps({'token': token})}\n\n"
+                
+                yield f"data: {json.dumps({'done': True})}\n\n"
+            else:
+                # No tool calls, just yield the generated content
+                content = resp_msg.get("content", "")
+                if content:
+                    # To mimic streaming, we can yield it all at once or split it. Yielding at once is fine.
+                    yield f"data: {json.dumps({'token': content})}\n\n"
+                yield f"data: {json.dumps({'done': True})}\n\n"
+                
         except Exception as e:
             logger.error(f"Chat stream error: {e}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"

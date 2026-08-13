@@ -14,8 +14,11 @@ class LLMProvider:
     
     async def generate(self, model: str, prompt: str, system: str = "", temperature: float = 0.7) -> str:
         raise NotImplementedError
+        
+    async def chat(self, model: str, messages: List[Dict[str, Any]], tools: Optional[List[Dict[str, Any]]] = None, temperature: float = 0.7) -> Dict[str, Any]:
+        raise NotImplementedError
     
-    async def generate_stream(self, model: str, prompt: str, system: str = "", temperature: float = 0.7) -> AsyncIterator[str]:
+    async def generate_stream(self, model: str, messages: List[Dict[str, Any]], tools: Optional[List[Dict[str, Any]]] = None, temperature: float = 0.7) -> AsyncIterator[Any]:
         raise NotImplementedError
         yield  # make it a generator
     
@@ -82,35 +85,55 @@ class OllamaProvider(LLMProvider):
         except Exception as e:
             logger.error(f"Ollama generate failed: {e}")
             raise
-    
-    async def generate_stream(self, model: str, prompt: str, system: str = "", temperature: float = 0.7) -> AsyncIterator[str]:
+            
+    async def chat(self, model: str, messages: List[Dict[str, Any]], tools: Optional[List[Dict[str, Any]]] = None, temperature: float = 0.7) -> Dict[str, Any]:
         payload = {
             "model": model,
-            "prompt": prompt,
-            "system": system,
+            "messages": messages,
+            "stream": False,
+            "options": {"temperature": temperature}
+        }
+        if tools:
+            payload["tools"] = tools
+            
+        try:
+            resp = await self._client.post("/api/chat", json=payload, timeout=120.0)
+            resp.raise_for_status()
+            return resp.json()
+        except httpx.ConnectError:
+            raise ConnectionError("Ollama service is not available. Start it with 'ollama serve'.")
+        except Exception as e:
+            logger.error(f"Ollama chat failed: {e}")
+            raise
+    
+    async def generate_stream(self, model: str, messages: List[Dict[str, Any]], tools: Optional[List[Dict[str, Any]]] = None, temperature: float = 0.7) -> AsyncIterator[Any]:
+        payload = {
+            "model": model,
+            "messages": messages,
             "stream": True,
             "options": {"temperature": temperature}
         }
+        if tools:
+            payload["tools"] = tools
+            
         try:
-            async with self._client.stream("POST", "/api/generate", json=payload, timeout=180.0) as resp:
+            async with self._client.stream("POST", "/api/chat", json=payload, timeout=180.0) as resp:
                 resp.raise_for_status()
                 import json
                 async for line in resp.aiter_lines():
                     if line.strip():
                         try:
                             chunk = json.loads(line)
-                            token = chunk.get("response", "")
-                            if token:
-                                yield token
+                            yield chunk
                             if chunk.get("done", False):
                                 return
                         except json.JSONDecodeError:
                             continue
         except httpx.ConnectError:
-            yield "[ERROR] Ollama service is not available. Start it with 'ollama serve'."
+            yield {"error": "Ollama service is not available. Start it with 'ollama serve'."}
         except Exception as e:
-            logger.error(f"Ollama stream failed: {e}")
-            yield f"[ERROR] {str(e)}"
+            logger.error(f"Ollama stream failed: {repr(e)}")
+            yield {"error": str(e)}
     
     async def embed(self, model: str, text: str) -> List[float]:
         payload = {"model": model, "input": text}

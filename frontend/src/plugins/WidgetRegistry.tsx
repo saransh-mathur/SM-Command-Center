@@ -6,8 +6,9 @@ import { LogsWidget } from './LogsWidget';
 import { Q1ControllableInputs } from '@/components/quadrants/Q1ControllableInputs';
 import { YouTubeCreatorWidget } from './YouTubeCreatorWidget';
 import { ECommerceWidget } from './ECommerceWidget';
-import { MetricTrackerWidget, MarkdownNoteViewer, AgenticChat } from '@/components/widgets/DynamicWidgets';
+import { MetricTrackerWidget, MarkdownNoteViewer, AgenticChat, DocumentUploadWidget } from '@/components/widgets/DynamicWidgets';
 import { LLMControlWidget } from '@/components/widgets/LLMControlWidget';
+import { IntegrationHubWidget } from '@/components/widgets/IntegrationHubWidget';
 
 export interface WidgetRegistryItem {
   id: string;
@@ -84,6 +85,16 @@ export const WIDGET_REGISTRY: Record<string, WidgetRegistryItem> = {
   'llm-control': {
     id: 'llm-control',
     component: LLMControlWidget,
+    defaultClassName: 'bg-white/80 backdrop-blur-md rounded-2xl border border-stone-100 shadow-sm flex flex-col overflow-hidden'
+  },
+  'document-upload': {
+    id: 'document-upload',
+    component: DocumentUploadWidget,
+    defaultClassName: 'bg-white/80 backdrop-blur-md rounded-2xl border border-stone-100 shadow-sm flex flex-col overflow-hidden'
+  },
+  'integration-hub': {
+    id: 'integration-hub',
+    component: IntegrationHubWidget,
     defaultClassName: 'bg-white/80 backdrop-blur-md rounded-2xl border border-stone-100 shadow-sm flex flex-col overflow-hidden'
   }
 };

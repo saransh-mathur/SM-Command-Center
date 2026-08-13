@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies (needed for pgvector, asyncpg, etc)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install python dependencies
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy source code
+COPY backend/ .
+
+# Ensure python paths
+ENV PYTHONPATH=/app
+
+# Command is overridden in docker-compose.yml
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
