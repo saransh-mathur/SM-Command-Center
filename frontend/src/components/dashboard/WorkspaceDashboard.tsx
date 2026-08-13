@@ -59,10 +59,10 @@ export const WorkspaceDashboard: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between bg-[#121215] p-4 rounded-xl border border-zinc-800/50">
+      <div className="flex items-center justify-between bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-stone-200 shadow-sm">
         <div>
-          <h2 className="text-xl font-semibold text-zinc-100">{workspace.name}</h2>
-          <p className="text-sm text-zinc-500">Persona: {workspace.persona_type}</p>
+          <h2 className="text-xl font-bold text-stone-800">{workspace.name}</h2>
+          <p className="text-sm font-medium text-stone-500">Persona: {workspace.persona_type}</p>
         </div>
       </div>
       

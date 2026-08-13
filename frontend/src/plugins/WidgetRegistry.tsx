@@ -19,71 +19,71 @@ export const WIDGET_REGISTRY: Record<string, WidgetRegistryItem> = {
   'hw-cpu': {
     id: 'hw-cpu',
     component: CpuWidget,
-    defaultClassName: 'bg-[#121215] p-3.5 rounded-lg border flex flex-col justify-center'
+    defaultClassName: 'bg-white/80 backdrop-blur-md p-3.5 rounded-xl border border-stone-100 shadow-sm flex flex-col justify-center'
   },
   'hw-mem': {
     id: 'hw-mem',
     component: MemWidget,
-    defaultClassName: 'bg-[#121215] p-3.5 rounded-lg border flex flex-col justify-center'
+    defaultClassName: 'bg-white/80 backdrop-blur-md p-3.5 rounded-xl border border-stone-100 shadow-sm flex flex-col justify-center'
   },
   'hw-gpu': {
     id: 'hw-gpu',
     component: GpuWidget,
-    defaultClassName: 'bg-[#121215] p-3.5 rounded-lg border flex flex-col justify-center'
+    defaultClassName: 'bg-white/80 backdrop-blur-md p-3.5 rounded-xl border border-stone-100 shadow-sm flex flex-col justify-center'
   },
   'hw-pwr': {
     id: 'hw-pwr',
     component: PwrWidget,
-    defaultClassName: 'bg-[#121215] p-3.5 rounded-lg border flex flex-col justify-center'
+    defaultClassName: 'bg-white/80 backdrop-blur-md p-3.5 rounded-xl border border-stone-100 shadow-sm flex flex-col justify-center'
   },
   'docker': {
     id: 'docker',
     component: DockerWidget,
-    defaultClassName: 'bg-[#121215] rounded-lg p-4 border flex flex-col'
+    defaultClassName: 'bg-white/80 backdrop-blur-md rounded-xl p-4 border border-stone-100 shadow-sm flex flex-col'
   },
   'actions': {
     id: 'actions',
     component: QuickActionsWidget,
-    defaultClassName: 'bg-[#121215] rounded-lg p-4 border flex flex-col justify-between'
+    defaultClassName: 'bg-white/80 backdrop-blur-md rounded-xl p-4 border border-stone-100 shadow-sm flex flex-col justify-between'
   },
   'data-entry': {
     id: 'data-entry',
     component: Q1ControllableInputs,
-    defaultClassName: 'overflow-y-auto flex flex-col bg-[#09090b]'
+    defaultClassName: 'overflow-y-auto flex flex-col bg-white/80 backdrop-blur-md rounded-xl border border-stone-100 shadow-sm'
   },
   'logs': {
     id: 'logs',
     component: LogsWidget,
-    defaultClassName: 'bg-[#121215] rounded-lg p-4 border flex flex-col'
+    defaultClassName: 'bg-white/80 backdrop-blur-md rounded-xl p-4 border border-stone-100 shadow-sm flex flex-col'
   },
   'youtube-creator': {
     id: 'youtube-creator',
     component: YouTubeCreatorWidget,
-    defaultClassName: 'bg-[#121215] rounded-lg p-4 border flex flex-col'
+    defaultClassName: 'bg-white/80 backdrop-blur-md rounded-xl p-4 border border-stone-100 shadow-sm flex flex-col'
   },
   'e-commerce': {
     id: 'e-commerce',
     component: ECommerceWidget,
-    defaultClassName: 'bg-[#121215] rounded-lg p-4 border flex flex-col'
+    defaultClassName: 'bg-white/80 backdrop-blur-md rounded-xl p-4 border border-stone-100 shadow-sm flex flex-col'
   },
   'metric-tracker': {
     id: 'metric-tracker',
     component: MetricTrackerWidget,
-    defaultClassName: 'bg-[#121215] rounded-xl border border-zinc-800/50 flex flex-col overflow-hidden'
+    defaultClassName: 'bg-white/80 backdrop-blur-md rounded-2xl border border-stone-100 shadow-sm flex flex-col overflow-hidden'
   },
   'markdown-notes': {
     id: 'markdown-notes',
     component: MarkdownNoteViewer,
-    defaultClassName: 'bg-[#121215] rounded-xl border border-zinc-800/50 flex flex-col overflow-hidden'
+    defaultClassName: 'bg-white/80 backdrop-blur-md rounded-2xl border border-stone-100 shadow-sm flex flex-col overflow-hidden'
   },
   'agent-chat': {
     id: 'agent-chat',
     component: AgenticChat,
-    defaultClassName: 'bg-[#121215] rounded-xl border border-zinc-800/50 flex flex-col overflow-hidden'
+    defaultClassName: 'bg-white/80 backdrop-blur-md rounded-2xl border border-stone-100 shadow-sm flex flex-col overflow-hidden'
   },
   'llm-control': {
     id: 'llm-control',
     component: LLMControlWidget,
-    defaultClassName: 'bg-[#121215] rounded-xl border border-zinc-800/50 flex flex-col overflow-hidden'
+    defaultClassName: 'bg-white/80 backdrop-blur-md rounded-2xl border border-stone-100 shadow-sm flex flex-col overflow-hidden'
   }
 };

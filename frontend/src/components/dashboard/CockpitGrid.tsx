@@ -52,13 +52,13 @@ export const CockpitGrid: React.FC<CockpitGridProps> = ({
   return (
     <div className="w-full pb-20">
       <div className="flex justify-between items-center mb-4 px-2">
-        <h2 className="text-sm font-semibold text-zinc-300">WORKSPACE GRID</h2>
+        <h2 className="text-sm font-semibold text-stone-500">WORKSPACE GRID</h2>
         <button 
           onClick={() => setIsEditMode(!isEditMode)}
           className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-md transition-all border ${
             isEditMode 
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]' 
-              : 'bg-[#121215] text-zinc-400 border-zinc-800 hover:text-zinc-200'
+              ? 'bg-rose-50 text-rose-600 border-rose-300 shadow-sm' 
+              : 'bg-white/80 text-stone-500 border-stone-200 hover:text-stone-800 shadow-sm'
           }`}
         >
           <LayoutDashboard className="w-3.5 h-3.5" />
@@ -66,7 +66,7 @@ export const CockpitGrid: React.FC<CockpitGridProps> = ({
         </button>
       </div>
 
-      <div ref={containerRef} className={isEditMode ? 'bg-[url("https://www.transparenttextures.com/patterns/graphy.png")] bg-repeat min-h-[800px] border border-dashed border-zinc-800' : 'min-h-[800px]'}>
+      <div ref={containerRef} className={isEditMode ? 'bg-[url("https://www.transparenttextures.com/patterns/graphy.png")] bg-repeat min-h-[800px] border border-dashed border-rose-200' : 'min-h-[800px]'}>
         {mounted && layouts && (
         <Responsive
           className="layout"
@@ -97,8 +97,8 @@ export const CockpitGrid: React.FC<CockpitGridProps> = ({
             
             const WidgetComponent = widget.component;
             const isEditingStyles = isEditMode 
-              ? 'border-emerald-500/50 shadow-lg cursor-grab active:cursor-grabbing hover:border-emerald-400' 
-              : 'border-zinc-800/30';
+              ? 'border-rose-400 shadow-md cursor-grab active:cursor-grabbing hover:border-rose-500' 
+              : 'border-stone-100 shadow-sm';
             
             return (
               <div 

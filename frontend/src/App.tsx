@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Header } from './components/Header';
 import { ControlHub } from './components/ControlHub';
 import { FloatingDock } from './components/FloatingDock';
@@ -18,10 +19,10 @@ import { WorkspaceDashboard } from './components/dashboard/WorkspaceDashboard';
 import { Omnibar } from './components/omnibar/Omnibar';
 
 export const App: React.FC = () => {
-  const { activeView } = useDashboard();
+  const { activeView, isDevMode } = useDashboard();
 
   return (
-    <div className="min-h-screen bg-[#0B0F17] bg-grid-pattern text-slate-100 flex flex-col justify-between relative pb-28">
+    <div className="min-h-screen bg-stone-50 bg-grid-pattern font-sans antialiased text-stone-800 flex flex-col justify-between relative pb-28">
       
       {/* Background ambient lighting effects */}
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[120px] pointer-events-none" />
@@ -35,10 +36,21 @@ export const App: React.FC = () => {
       <main className="max-w-[1720px] mx-auto w-full px-4 sm:px-6 py-6 flex flex-col gap-6 relative z-10">
         
         {activeView === 'cockpit' && (
-          <>
-            <ControlHub />
-            <WorkspaceDashboard />
-          </>
+          <motion.div layout className="flex flex-col gap-6">
+            {isDevMode && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ControlHub />
+              </motion.div>
+            )}
+            <motion.div layout>
+              <WorkspaceDashboard />
+            </motion.div>
+          </motion.div>
         )}
 
         {activeView === 'career' && <CareerJobHuntView />}

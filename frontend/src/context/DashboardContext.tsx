@@ -106,9 +106,14 @@ interface DashboardContextType {
     activeModules: string[];
     llmProvider: string;
     llmModel: string;
+    persona_type?: string;
     dashboard_layout?: any;
   } | null;
   refreshSetupStatus: () => Promise<void>;
+  
+  // Dev Mode State
+  isDevMode: boolean;
+  setIsDevMode: (val: boolean | ((prev: boolean) => boolean)) => void;
 
   // Authentication State
   isAuthenticated: boolean;
@@ -298,6 +303,9 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
   // 12. Global Setup Configuration
   const [isSetupCompleted, setIsSetupCompleted] = useState<boolean>(true);
   const [globalConfig, setGlobalConfig] = useState<any>(null);
+  
+  // Dev Mode Logic
+  const [isDevMode, setIsDevMode] = useState<boolean>(false);
 
   const refreshSetupStatus = useCallback(async () => {
     try {
@@ -312,8 +320,16 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
             activeModules: data.config.active_modules,
             llmProvider: data.config.llm_provider,
             llmModel: data.config.llm_model,
+            persona_type: data.config.persona_type,
             dashboard_layout: data.config.dashboard_layout
           });
+          
+          // Default Dev Mode to true only for developer persona
+          if (data.config.persona_type === 'developer') {
+            setIsDevMode(true);
+          } else {
+            setIsDevMode(false);
+          }
         }
       }
     } catch (e) {
@@ -816,6 +832,8 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
       currentRouletteTask, spinRoulette,
       activeModal, openModal, closeModal, selectedAdvisor, openAdvisorModal,
       isSetupCompleted, globalConfig, refreshSetupStatus,
+      isDevMode,
+      setIsDevMode,
       isAuthenticated, isAuthLoading, login, logout,
       toasts, addToast, removeToast,
     }}>
