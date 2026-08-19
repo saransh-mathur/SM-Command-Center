@@ -9,7 +9,7 @@ from services.mba_indexer import NMIMS_ROOT, MODULE_MAPPINGS
 OLLAMA_URL = "http://localhost:11434"
 EMBEDDING_MODEL = "qwen3-embedding:4b"
 LLM_MODEL = "qwen3:8b-q4_K_M"
-CACHE_DIR = "/home/saransh/command_center_backend/.rag_cache"
+CACHE_DIR = "/home/saransh/SM-Command-Center-1/backend/.rag_cache"
 
 os.makedirs(CACHE_DIR, exist_ok=True)
 

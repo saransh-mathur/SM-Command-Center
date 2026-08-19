@@ -57,8 +57,8 @@ echo -e "${CYAN}[2/3] Starting FastAPI Backend (Port 8000)...${NC}"
 PYTHON_BIN="python3"
 if [ -d "$BACKEND_DIR/venv/bin" ]; then
     PYTHON_BIN="$BACKEND_DIR/venv/bin/python"
-elif [ -d "/home/saransh/command_center_backend/venv/bin" ]; then
-    PYTHON_BIN="/home/saransh/command_center_backend/venv/bin/python"
+
+
 fi
 
 cd "$BACKEND_DIR"

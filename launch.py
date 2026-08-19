@@ -43,7 +43,7 @@ def main():
     # 2. Find Python Interpreter
     py_bin = sys.executable
     venv_py = os.path.join(BACKEND_DIR, "venv", "bin", "python")
-    fallback_py = "/home/saransh/command_center_backend/venv/bin/python"
+    fallback_py = "python3"
     
     if os.path.exists(venv_py):
         py_bin = venv_py
